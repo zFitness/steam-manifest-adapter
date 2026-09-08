@@ -1,4 +1,4 @@
-import { FIXTURE_DIRECTORY, FIXTURE_GAMES } from '@/fixtures/games';
+import type { ScannedGame } from '@/features/library-scan/types';
 
 import {
   convertReducer,
@@ -18,10 +18,66 @@ const ALL_STATUSES: ConvertStatus[] = [
   'converted',
 ];
 
-function scanned(): ConvertState {
+const PICKED = 'content://com.android.externalstorage.documents/tree/primary%3AGames';
+
+/** One row per status, so selection rules can be checked in every direction. */
+const GAMES: ScannedGame[] = [
+  {
+    id: 'appmanifest_1465360.acf',
+    appId: '1465360',
+    name: 'SnowRunner',
+    installDir: 'SnowRunner',
+    status: 'adaptable',
+  },
+  {
+    id: 'appmanifest_228980.acf',
+    appId: '228980',
+    name: 'Steamworks Common Redistributables',
+    installDir: 'Steamworks Shared',
+    status: 'adaptable',
+  },
+  {
+    id: 'appmanifest_725340.acf',
+    appId: '725340',
+    name: 'Lines X Free',
+    installDir: 'Lines X Free',
+    status: 'alreadyAdapted',
+    reason: 'already-marked',
+  },
+  {
+    id: 'appmanifest_391220.acf',
+    appId: '391220',
+    name: 'Rise of the Tomb Raider',
+    installDir: 'Rise of the Tomb Raider',
+    status: 'needsAttention',
+    reason: 'state-flags-incomplete',
+  },
+  {
+    id: 'appmanifest_943960.acf',
+    appId: '943960',
+    name: '3Buttons',
+    installDir: '3Buttons',
+    status: 'notAdaptable',
+    reason: 'dir-missing',
+  },
+];
+
+/** Enters the scanning state, mirroring a real grant. */
+function scanning(scanId = 1): ConvertState {
   return convertReducer(initialConvertState, {
+    type: 'pick-directory',
+    directory: PICKED,
+    scanId,
+  });
+}
+
+/** A completed scan, reached the only way the UI can reach it. */
+function scanned(): ConvertState {
+  const state = scanning();
+  return convertReducer(state, {
     type: 'scan-succeeded',
-    games: FIXTURE_GAMES,
+    scanId: state.scanId,
+    games: GAMES,
   });
 }
 
@@ -40,32 +96,18 @@ describe('convertReducer', () => {
   });
 
   describe('picking a directory', () => {
-    const PICKED = 'content://com.android.externalstorage.documents/tree/primary%3AGames';
-
     it('enters scanning with the directory it was handed', () => {
-      const state = convertReducer(initialConvertState, {
-        type: 'pick-directory',
-        directory: PICKED,
-      });
+      const state = scanning();
 
       expect(state.status).toBe('scanning');
       expect(state.directory).toBe(PICKED);
-    });
-
-    // The reducer must not substitute a built-in path for the one the user chose.
-    it('does not fall back to the fixture directory', () => {
-      const state = convertReducer(initialConvertState, {
-        type: 'pick-directory',
-        directory: PICKED,
-      });
-
-      expect(state.directory).not.toBe(FIXTURE_DIRECTORY);
     });
 
     it('starts scanning from a clean slate when re-picking after a scan', () => {
       const state = convertReducer(scanned(), {
         type: 'pick-directory',
         directory: PICKED,
+        scanId: 2,
       });
 
       expect(state.status).toBe('scanning');
@@ -74,6 +116,7 @@ describe('convertReducer', () => {
       expect(state.games).toEqual([]);
       expect(state.selected).toEqual([]);
       expect(state.summary).toBeNull();
+      expect(state.discovered).toBe(0);
     });
 
     it('returns to no-directory when the grant fails, keeping no directory', () => {
@@ -97,17 +140,123 @@ describe('convertReducer', () => {
     });
   });
 
+  describe('scan progress', () => {
+    it('tracks the discovered count while scanning', () => {
+      const state = scanning();
+
+      const progressed = convertReducer(state, {
+        type: 'scan-progressed',
+        scanId: state.scanId,
+        discovered: 3,
+      });
+
+      expect(progressed.discovered).toBe(3);
+      expect(progressed.status).toBe('scanning');
+    });
+
+    it('ignores progress from a scan that is no longer current', () => {
+      const state = scanning();
+
+      const progressed = convertReducer(state, {
+        type: 'scan-progressed',
+        scanId: state.scanId - 1,
+        discovered: 99,
+      });
+
+      expect(progressed.discovered).toBe(0);
+    });
+  });
+
+  // A scan cannot be recalled once started, so stale results must be dropped
+  // rather than rendered. These pin that down for every scan outcome.
+  describe('stale scan results', () => {
+    it('discards a result whose id does not match the current scan', () => {
+      const state = scanning();
+
+      const next = convertReducer(state, {
+        type: 'scan-succeeded',
+        scanId: state.scanId - 1,
+        games: GAMES,
+      });
+
+      expect(next.status).toBe('scanning');
+      expect(next.games).toEqual([]);
+    });
+
+    it('discards a result that arrives after the scan was cancelled', () => {
+      const state = scanning();
+      const cancelled = convertReducer(state, { type: 'cancel-scan' });
+
+      const late = convertReducer(cancelled, {
+        type: 'scan-succeeded',
+        scanId: state.scanId,
+        games: GAMES,
+      });
+
+      expect(late.status).toBe('no-directory');
+      expect(late.games).toEqual([]);
+      expect(late.selected).toEqual([]);
+    });
+
+    it('discards a result from the scan a newer pick superseded', () => {
+      const first = scanning();
+      const second = convertReducer(first, {
+        type: 'pick-directory',
+        directory: PICKED,
+        scanId: first.scanId + 1,
+      });
+
+      const late = convertReducer(second, {
+        type: 'scan-succeeded',
+        scanId: first.scanId,
+        games: GAMES,
+      });
+
+      expect(late.status).toBe('scanning');
+      expect(late.games).toEqual([]);
+    });
+
+    it.each(['scan-failed', 'permission-revoked', 'scan-found-nothing'] as const)(
+      'discards a stale %s',
+      (type) => {
+        const state = scanning();
+        const cancelled = convertReducer(state, { type: 'cancel-scan' });
+
+        const late = convertReducer(cancelled, { type, scanId: state.scanId });
+
+        expect(late.status).toBe('no-directory');
+      },
+    );
+  });
+
+  describe('cancelling a scan', () => {
+    it('returns to no-directory without a partial list', () => {
+      const state = convertReducer(scanning(), { type: 'cancel-scan' });
+
+      expect(state.status).toBe('no-directory');
+      expect(state.games).toEqual([]);
+      expect(state.directory).toBeNull();
+      expect(state.discovered).toBe(0);
+    });
+
+    it('does nothing when no scan is running', () => {
+      const state = scanned();
+
+      expect(convertReducer(state, { type: 'cancel-scan' })).toBe(state);
+    });
+  });
+
   describe('default selection', () => {
     it('ticks only adaptable games', () => {
       const state = scanned();
-      const adaptable = FIXTURE_GAMES.filter((g) => g.status === 'adaptable');
+      const adaptable = GAMES.filter((g) => g.status === 'adaptable');
       expect(state.selected).toHaveLength(adaptable.length);
       expect(state.selected.sort()).toEqual(adaptable.map((g) => g.id).sort());
     });
 
     it('does not tick alreadyAdapted, needsAttention or notAdaptable', () => {
       const state = scanned();
-      for (const game of FIXTURE_GAMES) {
+      for (const game of GAMES) {
         if (game.status !== 'adaptable') {
           expect(state.selected).not.toContain(game.id);
         }
@@ -116,43 +265,94 @@ describe('convertReducer', () => {
   });
 
   describe('toggle-all', () => {
+    /**
+     * A finished scan already has every adaptable row ticked, so the *first*
+     * "select all" tap is a deselect. These start from an empty selection when
+     * they need to exercise the selecting direction.
+     */
+    function nothingSelected(): ConvertState {
+      return { ...scanned(), selected: [] };
+    }
+
     it('never selects notAdaptable games', () => {
-      const state = convertReducer(scanned(), { type: 'toggle-all' });
-      const blocked = FIXTURE_GAMES.filter((g) => g.status === 'notAdaptable');
+      const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+      const blocked = GAMES.filter((g) => g.status === 'notAdaptable');
       expect(blocked.length).toBeGreaterThan(0);
       for (const game of blocked) {
         expect(state.selected).not.toContain(game.id);
       }
     });
 
-    it('selects every selectable game', () => {
-      const state = convertReducer(scanned(), { type: 'toggle-all' });
-      const selectable = FIXTURE_GAMES.filter((g) => g.status !== 'notAdaptable');
-      expect(state.selected).toHaveLength(selectable.length);
+    // "Select all" is the bulk form of the default selection, not "tick
+    // everything tickable": sweeping in alreadyAdapted / needsAttention rows
+    // would re-mark games the user never singled out.
+    it('selects only adaptable games', () => {
+      const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+      const adaptable = GAMES.filter((g) => g.status === 'adaptable');
+
+      expect(state.selected.sort()).toEqual(adaptable.map((g) => g.id).sort());
     });
 
-    it('clears the selection when everything selectable is already selected', () => {
-      const all = convertReducer(scanned(), { type: 'toggle-all' });
-      const cleared = convertReducer(all, { type: 'toggle-all' });
+    it.each(['alreadyAdapted', 'needsAttention'] as const)(
+      'does not select %s games',
+      (status) => {
+        const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+        const game = GAMES.find((g) => g.status === status)!;
+
+        expect(state.selected).not.toContain(game.id);
+      },
+    );
+
+    // The default selection is already the full adaptable set, so one tap clears.
+    it('clears the selection when every adaptable game is already selected', () => {
+      const cleared = convertReducer(scanned(), { type: 'toggle-all' });
+
       expect(cleared.selected).toEqual([]);
+    });
+
+    // Deselecting all must not undo a deliberate per-row choice.
+    it('keeps a hand-picked row when clearing the adaptable ones', () => {
+      const manual = GAMES.find((g) => g.status === 'needsAttention')!;
+      const withManual = convertReducer(scanned(), {
+        type: 'toggle-game',
+        id: manual.id,
+      });
+
+      const cleared = convertReducer(withManual, { type: 'toggle-all' });
+
+      expect(cleared.selected).toEqual([manual.id]);
+    });
+
+    // A hand-picked row is already selected, so selecting all must union rather
+    // than replace.
+    it('keeps a hand-picked row when selecting the adaptable ones', () => {
+      const manual = GAMES.find((g) => g.status === 'alreadyAdapted')!;
+      const onlyManual: ConvertState = { ...scanned(), selected: [manual.id] };
+
+      const state = convertReducer(onlyManual, { type: 'toggle-all' });
+
+      expect(state.selected).toContain(manual.id);
+      for (const game of GAMES.filter((g) => g.status === 'adaptable')) {
+        expect(state.selected).toContain(game.id);
+      }
     });
   });
 
   describe('toggle-game', () => {
     it('ignores notAdaptable games', () => {
-      const blocked = FIXTURE_GAMES.find((g) => g.status === 'notAdaptable')!;
+      const blocked = GAMES.find((g) => g.status === 'notAdaptable')!;
       const state = convertReducer(scanned(), { type: 'toggle-game', id: blocked.id });
       expect(state.selected).not.toContain(blocked.id);
     });
 
     it('unticks an already ticked game', () => {
-      const target = FIXTURE_GAMES.find((g) => g.status === 'adaptable')!;
+      const target = GAMES.find((g) => g.status === 'adaptable')!;
       const state = convertReducer(scanned(), { type: 'toggle-game', id: target.id });
       expect(state.selected).not.toContain(target.id);
     });
 
     it('ticks a selectable game that was not ticked by default', () => {
-      const target = FIXTURE_GAMES.find((g) => g.status === 'needsAttention')!;
+      const target = GAMES.find((g) => g.status === 'needsAttention')!;
       const state = convertReducer(scanned(), { type: 'toggle-game', id: target.id });
       expect(state.selected).toContain(target.id);
     });
@@ -162,16 +362,26 @@ describe('convertReducer', () => {
     it.each(['scan-failed', 'permission-revoked'] as const)(
       '%s drops the previous game list',
       (type) => {
-        const state = convertReducer(scanned(), { type });
-        expect(state.games).toEqual([]);
-        expect(state.selected).toEqual([]);
+        // Reached from a running scan, which is the only way these occur.
+        const state = scanning();
+        const next = convertReducer(state, { type, scanId: state.scanId });
+
+        expect(next.status).toBe(type);
+        expect(next.games).toEqual([]);
+        expect(next.selected).toEqual([]);
       },
     );
 
     it('scanned-empty drops the previous game list', () => {
-      const state = convertReducer(scanned(), { type: 'scan-found-nothing' });
-      expect(state.games).toEqual([]);
-      expect(state.selected).toEqual([]);
+      const state = scanning();
+      const next = convertReducer(state, {
+        type: 'scan-found-nothing',
+        scanId: state.scanId,
+      });
+
+      expect(next.status).toBe('scanned-empty');
+      expect(next.games).toEqual([]);
+      expect(next.selected).toEqual([]);
     });
   });
 
@@ -189,7 +399,13 @@ describe('convertReducer', () => {
     });
 
     it('summarises per-status counts rather than an overall failure', () => {
-      const start = convertReducer(scanned(), { type: 'toggle-all' });
+      // Hand-pick the non-adaptable rows too, so the summary has something to
+      // report in every bucket — "select all" alone only covers adaptable ones.
+      const withOthers = GAMES.filter((g) => g.status !== 'notAdaptable').reduce(
+        (acc, game) => convertReducer(acc, { type: 'toggle-game', id: game.id }),
+        scanned(),
+      );
+      const start = convertReducer(withOthers, { type: 'toggle-all' });
       const converting = convertReducer(start, { type: 'start-conversion' });
       const done = convertReducer(converting, { type: 'conversion-finished' });
 

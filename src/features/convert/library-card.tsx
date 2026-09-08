@@ -7,7 +7,6 @@ import { FolderIcon } from '@/features/convert/chain-icons';
 import type { ConvertState } from '@/features/convert/convert-state';
 import { GameRow } from '@/features/convert/game-row';
 import { LibraryCardMessage } from '@/features/convert/library-card-message';
-import { isSelectable } from '@/fixtures/games';
 import { useTranslate } from '@/i18n/provider';
 
 type LibraryCardProps = {
@@ -172,11 +171,20 @@ export function LibraryCard({
   const t = useTranslate();
   const folderStroke = String(useCSSVariable('--muted-tertiary') ?? '#747584');
 
-  const selectable = state.games.filter(isSelectable);
+  const adaptableIds = state.games
+    .filter((g) => g.status === 'adaptable')
+    .map((g) => g.id);
+  const adaptableCount = adaptableIds.length;
+  // Mirrors the reducer: "select all" covers the adaptable rows only, so the
+  // toggle reads as fully selected once those are ticked — regardless of any
+  // rows the user picked by hand.
   const allSelected =
-    selectable.length > 0 && selectable.length === state.selected.length;
-  const adaptableCount = state.games.filter((g) => g.status === 'adaptable').length;
+    adaptableCount > 0 && adaptableIds.every((id) => state.selected.includes(id));
 
+  // `scanned-has-adaptable` is a misnomer once a scan can find manifests that
+  // are all unadaptable: the spec requires the full list in that case too, so
+  // the row-by-row reasons are visible. Renaming the status is left to a later
+  // change to keep this diff to the scanning work.
   const showList =
     state.status === 'scanned-has-adaptable' ||
     state.status === 'converting' ||
@@ -206,8 +214,10 @@ export function LibraryCard({
         <LibraryCardMessage
           icon={<Spinner size="lg" />}
           title={t('convert.library.scanning.title')}
+          // The running count from the scanner, not the finished list: while
+          // scanning, `games` is still empty by design.
           description={t('convert.library.scanning.found', {
-            count: state.games.length,
+            count: state.discovered,
           })}
           action={
             <CardAction
@@ -292,11 +302,17 @@ export function LibraryCard({
           ) : null}
 
           {/* Only the list scrolls, so the primary button below the card stays
-              reachable without scrolling the whole page. */}
+              reachable without scrolling the whole page.
+
+              `nestedScrollEnabled` is required, not optional: this ScrollView
+              sits inside the screen's own ScrollView, and on Android nested
+              scrolling is off by default, so without it the outer view consumes
+              every drag and the list cannot be scrolled at all. */}
           <ScrollView
             style={{ maxHeight: LibraryListMaxHeight }}
             contentContainerStyle={{ gap: ListRowGap }}
             showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
           >
             {state.games.map((game) => (
               <GameRow

@@ -1,6 +1,6 @@
 import { Chip } from 'heroui-native';
 
-import type { GameStatus } from '@/fixtures/games';
+import type { GameStatus } from '@/features/library-scan/types';
 import { useTranslate } from '@/i18n/provider';
 
 /**

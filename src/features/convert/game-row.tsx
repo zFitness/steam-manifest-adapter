@@ -2,7 +2,7 @@ import { Checkbox } from 'heroui-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { GameStatusChip } from '@/features/convert/game-status-chip';
-import { isSelectable, type FixtureGame } from '@/fixtures/games';
+import { isSelectable, type ScannedGame } from '@/features/library-scan/types';
 import { useTranslate } from '@/i18n/provider';
 
 /**
@@ -12,13 +12,19 @@ import { useTranslate } from '@/i18n/provider';
  * `notAdaptable` games can never be converted, so their checkbox is disabled and
  * the row does not fire `onToggle` at all — the reducer rejects them too, this
  * only stops the pointless dispatch.
+ *
+ * Deliberate addition to the board: boards 2:728 / 2:755 show only name, meta
+ * and status chip, but the spec requires every non-`adaptable` row to say *why*
+ * it is not adaptable rather than relying on the chip's colour. The reason sits
+ * under the meta line in the same muted 11px voice so it does not compete with
+ * the game name.
  */
 export function GameRow({
   game,
   isSelected,
   onToggle,
 }: {
-  game: FixtureGame;
+  game: ScannedGame;
   isSelected: boolean;
   onToggle: (id: string) => void;
 }) {
@@ -62,6 +68,12 @@ export function GameRow({
             installDir: game.installDir,
           })}
         </Text>
+        {/* `adaptable` rows have nothing to explain, so they carry no reason. */}
+        {game.reason === undefined ? null : (
+          <Text numberOfLines={2} className="text-[11px] text-muted">
+            {t(`convert.reason.${game.reason}`)}
+          </Text>
+        )}
       </View>
 
       <GameStatusChip status={game.status} />

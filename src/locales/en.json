@@ -45,12 +45,22 @@
   "convert.library.header.selected": { "one": "{{count}} selected", "other": "{{count}} selected" },
   "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
 
+  "convert.reason.already-marked": "Already has the WinNative marker, nothing to do",
+  "convert.reason.state-flags-incomplete": "May not have finished downloading; verify it in Steam first",
+  "convert.reason.dir-name-mismatch": "Folder name differs from the manifest; rename it to match",
+  "convert.reason.dir-empty": "The game folder is empty, so its data may be incomplete",
+  "convert.reason.stale-in-progress": "An unfinished download marker was left behind",
+  "convert.reason.dir-missing": "No game folder matches this manifest",
+  "convert.reason.manifest-unreadable": "The manifest could not be read or is malformed",
+  "convert.reason.manifest-missing-fields": "The manifest is missing required fields",
+  "convert.reason.manifest-invalid-installdir": "The install folder in the manifest is not valid",
+
   "convert.library.failed.title": "Scan failed",
   "convert.library.failed.description": "The folder could not be read. Pick the folder again and retry.",
   "convert.library.failed.action": "Choose folder again",
 
   "convert.library.noResults.title": "Nothing to adapt",
-  "convert.library.noResults.description": "No adaptable Steam games were found in this folder.",
+  "convert.library.noResults.description": "No adaptable Steam games were found in this folder. Make sure the folder you picked directly contains appmanifest_*.acf files.",
   "convert.library.noResults.action": "Choose another folder",
 
   "convert.library.permissionLost.title": "Folder access expired",

@@ -45,12 +45,22 @@
   "convert.library.header.selected": "已选 {{count}} 个",
   "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
 
+  "convert.reason.already-marked": "已有 WinNative 识别标记，无需再次适配",
+  "convert.reason.state-flags-incomplete": "可能未下载完成或正在更新，建议先在 Steam 中校验",
+  "convert.reason.dir-name-mismatch": "游戏目录名与清单不一致，需自行改成清单中的名称",
+  "convert.reason.dir-empty": "游戏目录是空的，游戏数据可能不完整",
+  "convert.reason.stale-in-progress": "目录中残留未完成的下载标记",
+  "convert.reason.dir-missing": "找不到清单对应的游戏目录",
+  "convert.reason.manifest-unreadable": "清单无法读取或格式不正确",
+  "convert.reason.manifest-missing-fields": "清单缺少必需字段",
+  "convert.reason.manifest-invalid-installdir": "清单中的安装目录不合法",
+
   "convert.library.failed.title": "扫描失败",
   "convert.library.failed.description": "无法读取该目录，请重新选择目录后再试。",
   "convert.library.failed.action": "重新选择目录",
 
   "convert.library.noResults.title": "没有可适配的游戏",
-  "convert.library.noResults.description": "该目录下未找到可适配的 Steam 游戏。",
+  "convert.library.noResults.description": "该目录下未找到可适配的 Steam 游戏。请确认所选目录直接包含 appmanifest_*.acf 清单文件。",
   "convert.library.noResults.action": "选择其他目录",
 
   "convert.library.permissionLost.title": "目录授权已失效",

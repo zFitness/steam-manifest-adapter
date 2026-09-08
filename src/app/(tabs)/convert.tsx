@@ -14,12 +14,15 @@ import {
 } from '@/features/convert/convert-state';
 import { DevStateSwitcher } from '@/features/convert/dev-state-switcher';
 import { LibraryCard } from '@/features/convert/library-card';
+import { createExpoFs } from '@/features/library-scan/expo-fs';
+import { scanLibrary } from '@/features/library-scan/scanner';
 import { writeDirectory } from '@/features/storage-access/directory-store';
 import { createSafStorageAccess } from '@/features/storage-access/saf-storage';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTranslate } from '@/i18n/provider';
 
 const storageAccess = createSafStorageAccess();
+const fs = createExpoFs();
 
 export default function ConvertScreen() {
   const t = useTranslate();
@@ -31,6 +34,11 @@ export default function ConvertScreen() {
   // The picker is a system activity; a second tap while it is up would launch
   // a second one. A ref (not state) because this must not trigger a re-render.
   const pickInFlight = useRef(false);
+  // Mutable handle the running scan polls between manifests. Held in a ref so
+  // flipping it never waits on a re-render.
+  const scanToken = useRef<{ cancelled: boolean } | null>(null);
+  // Monotonic source of scan ids. A ref, because minting one must not re-render.
+  const nextScanId = useRef(0);
   const mutedTertiary = String(useCSSVariable('--muted-tertiary') ?? '#747584');
 
   const isBusy = state.status === 'converting';
@@ -41,11 +49,65 @@ export default function ConvertScreen() {
   const canConvert =
     state.status === 'scanned-has-adaptable' && state.selected.length > 0;
 
+  /**
+   * Runs a scan and reports it under a fresh id.
+   *
+   * A scan cannot be recalled once started, so every dispatch carries the id it
+   * belongs to and the reducer drops anything stale. Cancelling or re-picking
+   * therefore needs no coordination here beyond flipping the token.
+   */
+  const runScan = useCallback(async (rootUri: string, scanId: number) => {
+    const token = { cancelled: false };
+    scanToken.current = token;
+
+    const result = await scanLibrary({
+      fs,
+      rootUri,
+      token,
+      onProgress: (discovered) => {
+        dispatch({ type: 'scan-progressed', scanId, discovered });
+      },
+    });
+
+    // A cancelled scan's outcome is deliberately dropped: the card already
+    // returned to its pre-scan state and must not flicker back to a result.
+    if (result.kind === 'cancelled') {
+      return;
+    }
+    if (scanToken.current === token) {
+      scanToken.current = null;
+    }
+
+    switch (result.kind) {
+      case 'ok':
+        // An empty library is a successful scan, not a failure.
+        if (result.games.length === 0) {
+          dispatch({ type: 'scan-found-nothing', scanId });
+        } else {
+          dispatch({ type: 'scan-succeeded', scanId, games: result.games });
+        }
+        break;
+      case 'permission-revoked':
+        dispatch({ type: 'permission-revoked', scanId });
+        break;
+      case 'unreadable':
+        dispatch({ type: 'scan-failed', scanId });
+        break;
+    }
+  }, []);
+
   const handlePickDirectory = useCallback(async () => {
     if (pickInFlight.current) {
       return;
     }
     pickInFlight.current = true;
+
+    // Re-picking abandons whatever is still scanning, so its result cannot
+    // land on top of the new directory's.
+    if (scanToken.current !== null) {
+      scanToken.current.cancelled = true;
+      scanToken.current = null;
+    }
 
     try {
       const picked = await storageAccess.pickDirectory();
@@ -62,7 +124,11 @@ export default function ConvertScreen() {
       // on the next cold start but must not interrupt this session.
       await writeDirectory(picked.uri);
       // The readable name is what reaches the card — never the `content://` URI.
-      dispatch({ type: 'pick-directory', directory: picked.name });
+      // One id per grant, minted here so the scan and the reducer agree on it.
+      const scanId = nextScanId.current + 1;
+      nextScanId.current = scanId;
+      dispatch({ type: 'pick-directory', directory: picked.name, scanId });
+      void runScan(picked.uri, scanId);
     } catch {
       // The grant did not happen. Nothing was persisted; offer a retry.
       setCancelledMessage(false);
@@ -71,10 +137,16 @@ export default function ConvertScreen() {
     } finally {
       pickInFlight.current = false;
     }
-  }, []);
+  }, [runScan]);
 
   const handleCancelScan = useCallback(() => {
-    dispatch({ type: 'reset' });
+    // Tell the running scan to stop at its next checkpoint, then retire its id
+    // so that even a result already on its way is discarded.
+    if (scanToken.current !== null) {
+      scanToken.current.cancelled = true;
+      scanToken.current = null;
+    }
+    dispatch({ type: 'cancel-scan' });
     setCancelledMessage(true);
     setPermissionDenied(false);
   }, []);
