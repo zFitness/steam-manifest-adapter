@@ -24,6 +24,10 @@
   "convert.chain.pickTarget": "选择目标",
   "convert.chain.unsupported": "暂不支持",
 
+  "convert.platform.gaishi": "盖世模拟器",
+  "convert.platform.winnative": "WinNative",
+  "convert.platform.gamenative": "GameNative",
+
   "convert.library.empty.title": "未选择游戏目录",
   "convert.library.empty.description": "选择存放 Steam 游戏的目录后即可开始扫描",
   "convert.library.empty.action": "设置游戏目录",
@@ -31,10 +35,14 @@
 
   "convert.library.scanning.title": "正在扫描 Steam 游戏清单…",
   "convert.library.scanning.found": "已发现 {{count}} 个",
+  "convert.library.scanning.cancel": "取消扫描",
+  "convert.library.scanning.cancelled": "已取消本次扫描",
 
   "convert.library.header.games": "{{count}} 个游戏",
+  "convert.library.header.adaptable": "可适配 {{count}}",
   "convert.library.header.reselect": "重新选择",
   "convert.library.header.selected": "已选 {{count}} 个",
+  "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
 
   "convert.library.failed.title": "扫描失败",
   "convert.library.failed.description": "无法读取该目录，请重新选择目录后再试。",
@@ -55,6 +63,7 @@
   "convert.progress.counter": "{{done}} / {{total}}",
 
   "convert.done.title": "适配完成",
+  "convert.done.summaryItem": "{{label}} {{count}}",
   "convert.done.viewResults": "查看详细结果",
   "convert.done.viewGuide": "查看 WinNative 设置指引",
 

@@ -24,6 +24,10 @@
   "convert.chain.pickTarget": "Choose a target",
   "convert.chain.unsupported": "Not supported yet",
 
+  "convert.platform.gaishi": "Gaishi Emulator",
+  "convert.platform.winnative": "WinNative",
+  "convert.platform.gamenative": "GameNative",
+
   "convert.library.empty.title": "No game folder selected",
   "convert.library.empty.description": "Pick the folder that holds your Steam games to start scanning",
   "convert.library.empty.action": "Set game folder",
@@ -31,10 +35,14 @@
 
   "convert.library.scanning.title": "Scanning Steam manifests…",
   "convert.library.scanning.found": { "one": "{{count}} found", "other": "{{count}} found" },
+  "convert.library.scanning.cancel": "Cancel scan",
+  "convert.library.scanning.cancelled": "Scan cancelled",
 
   "convert.library.header.games": { "one": "{{count}} game", "other": "{{count}} games" },
+  "convert.library.header.adaptable": { "one": "{{count}} adaptable", "other": "{{count}} adaptable" },
   "convert.library.header.reselect": "Change",
   "convert.library.header.selected": { "one": "{{count}} selected", "other": "{{count}} selected" },
+  "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
 
   "convert.library.failed.title": "Scan failed",
   "convert.library.failed.description": "The folder could not be read. Pick the folder again and retry.",
@@ -55,6 +63,7 @@
   "convert.progress.counter": "{{done}} / {{total}}",
 
   "convert.done.title": "Adaptation complete",
+  "convert.done.summaryItem": "{{label}} {{count}}",
   "convert.done.viewResults": "View detailed results",
   "convert.done.viewGuide": "View WinNative setup guide",
 
