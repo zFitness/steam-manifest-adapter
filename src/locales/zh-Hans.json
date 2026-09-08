@@ -1,0 +1,117 @@
+{
+  "app.name": "Steam 清单适配器",
+  "app.tagline": "将已有 Steam 游戏目录适配为 WinNative 可识别的格式",
+
+  "common.cancel": "取消",
+  "common.confirm": "确认",
+  "common.close": "关闭",
+  "common.back": "返回",
+  "common.retry": "重试",
+  "common.selectAll": "全选",
+  "common.deselectAll": "取消全选",
+  "common.loading": "加载中…",
+
+  "tabs.convert": "转换",
+  "tabs.about": "关于",
+
+  "convert.title": "Steam 清单适配器",
+  "convert.subtitle": "将已有 Steam 游戏目录适配为 WinNative 可识别的格式",
+  "convert.safetyNote": "不会修改游戏文件和 ACF 清单",
+  "convert.chain.label": "转换链路",
+  "convert.chain.source": "来源",
+  "convert.chain.target": "目标",
+  "convert.chain.pickSource": "选择来源",
+  "convert.chain.pickTarget": "选择目标",
+  "convert.chain.unsupported": "暂不支持",
+
+  "convert.library.empty.title": "未选择游戏目录",
+  "convert.library.empty.description": "选择存放 Steam 游戏的目录后即可开始扫描",
+  "convert.library.empty.action": "设置游戏目录",
+  "convert.library.empty.hint": "通常位于 storage/ 下",
+
+  "convert.library.scanning.title": "正在扫描 Steam 游戏清单…",
+  "convert.library.scanning.found": "已发现 {{count}} 个",
+
+  "convert.library.header.games": "{{count}} 个游戏",
+  "convert.library.header.reselect": "重新选择",
+  "convert.library.header.selected": "已选 {{count}} 个",
+
+  "convert.library.failed.title": "扫描失败",
+  "convert.library.failed.description": "无法读取该目录，请重新选择目录后再试。",
+  "convert.library.failed.action": "重新选择目录",
+
+  "convert.library.noResults.title": "没有可适配的游戏",
+  "convert.library.noResults.description": "该目录下未找到可适配的 Steam 游戏。",
+  "convert.library.noResults.action": "选择其他目录",
+
+  "convert.library.permissionLost.title": "目录授权已失效",
+  "convert.library.permissionLost.description": "该目录的访问授权已被取消，请重新授权后继续。",
+  "convert.library.permissionLost.action": "重新设置目录",
+
+  "convert.action.start": "转换已选游戏（{{count}}）",
+  "convert.action.disabledReason": "请至少选择一个游戏",
+
+  "convert.progress.title": "正在适配…",
+  "convert.progress.counter": "{{done}} / {{total}}",
+
+  "convert.done.title": "适配完成",
+  "convert.done.viewResults": "查看详细结果",
+  "convert.done.viewGuide": "查看 WinNative 设置指引",
+
+  "status.adaptable": "可适配",
+  "status.alreadyAdapted": "已适配",
+  "status.needsAttention": "需要注意",
+  "status.notAdaptable": "无法适配",
+  "status.success": "成功",
+  "status.skipped": "跳过",
+  "status.failed": "失败",
+
+  "detail.title": "游戏检查详情",
+  "detail.appId": "AppID",
+  "detail.acfFile": "ACF 文件",
+  "detail.installDir": "安装目录",
+  "detail.checklist": "检查清单",
+  "detail.check.acfReadable": "ACF 可读取",
+  "detail.check.appIdValid": "AppID 有效",
+  "detail.check.installDirFound": "找到对应的游戏目录",
+  "detail.check.downloadComplete": "下载状态已完成",
+  "detail.check.writable": "目录具有写入权限",
+
+  "confirm.title": "确认适配游戏？",
+  "confirm.description": "不会修改游戏文件和 ACF 清单，仅补充 WinNative 需要的文件。",
+  "confirm.selectedCount": "已选中 {{count}} 个游戏",
+  "confirm.start": "开始适配",
+
+  "result.title": "适配完成",
+  "result.perItem": "逐项结果",
+  "result.nextSteps": "后续步骤",
+  "result.nextSteps.1": "关闭共享下载文件夹",
+  "result.nextSteps.2": "将 Steam Downloads 指向 steamapps/common",
+  "result.nextSteps.3": "登录 Steam 并刷新游戏库",
+
+  "about.title": "关于",
+  "about.version": "版本 {{version}}",
+  "about.intro": "一个本地工具，把已有的 Steam 游戏目录适配成 WinNative 能识别的格式。",
+  "about.supportedChain": "当前支持链路",
+  "about.help": "帮助",
+  "about.help.winnative": "WinNative 设置指引",
+  "about.help.gaishi": "从盖世模拟器导入",
+  "about.help.troubleshooting": "常见问题排查",
+  "about.settings": "设置",
+  "about.settings.language": "语言",
+  "about.links.github": "GitHub",
+  "about.links.license": "许可证",
+  "about.links.feedback": "问题反馈",
+  "about.disclaimer.title": "非官方项目",
+  "about.disclaimer.body": "本项目为非官方的社区项目，与 Valve/Steam、WinNative、盖世模拟器均无官方关联，也未获得其认可或授权。相关商标归各自权利人所有。",
+
+  "settings.language.title": "语言",
+  "settings.language.system": "跟随系统",
+  "settings.language.zhHans": "简体中文",
+  "settings.language.en": "English",
+
+  "guide.winnative.title": "WinNative 设置指引",
+  "guide.gaishi.title": "从盖世模拟器导入",
+  "guide.troubleshooting.title": "常见问题排查",
+  "guide.notFound": "该文档不可用"
+}

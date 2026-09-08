@@ -1,4 +1,10 @@
-:root {
+@import 'tailwindcss';
+@import 'uniwind';
+@import 'heroui-native/styles';
+
+@source '../node_modules/heroui-native/lib';
+
+@theme {
   --font-display:
     Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
     Segoe UI Symbol, Noto Color Emoji;
@@ -6,4 +12,126 @@
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
+
+  /* Base radius 8px makes the built-in scale land on the design values:
+     radius-xl = 12 (list row / icon), radius-2xl = 16 (inner block), radius-4xl = 32 (tab pill). */
+  --radius: 0.5rem;
+
+  /* Design radii with no built-in alias. */
+  --radius-card: 20px;
+  --radius-pill: 26px;
+  --radius-checkbox: 5px;
+}
+
+/* Tertiary text (unselected tab labels, board 2:67). A degraded step below
+   --muted, which HeroUI Native has no variable for.
+   Darkened from the design's #8A8B98 to #747584: at the 11px label size the
+   original only reached 3.37:1 on --surface, below the 4.5:1 the theming
+   requirement demands. Hue and saturation are preserved. */
+@theme inline static {
+  --color-muted-tertiary: var(--muted-tertiary);
+}
+
+@layer theme {
+  :root {
+    @variant light {
+      --background: #f7f7fc;
+      --foreground: #1a1b25;
+
+      --surface: #ffffff;
+      --surface-foreground: var(--foreground);
+
+      --surface-secondary: #f7f7fc;
+      --surface-secondary-foreground: var(--foreground);
+
+      --surface-tertiary: #eeeef9;
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: #ffffff;
+      --overlay-foreground: var(--foreground);
+      --backdrop: rgba(26, 27, 37, 0.4);
+
+      --muted: #5a5c6b;
+      --muted-tertiary: #747584;
+
+      --default: #eeeef9;
+      --default-foreground: var(--foreground);
+
+      --accent: #5b5fef;
+      --accent-foreground: #ffffff;
+
+      --success: #2e7d32;
+      --success-foreground: #ffffff;
+
+      --warning: #ed6c02;
+      --warning-foreground: #ffffff;
+
+      --danger: #d32f2f;
+      --danger-foreground: #ffffff;
+
+      --segment: #ffffff;
+      --segment-foreground: var(--foreground);
+
+      --border: #e3e3f5;
+      --separator: #eeeef9;
+      --focus: var(--accent);
+      --link: var(--accent);
+
+      /* Floating tab bar / card shadow, from board 2:58. */
+      --surface-shadow: 0 4px 16px 0 rgba(77, 77, 115, 0.08);
+      --overlay-shadow: 0 -4px 24px 0 rgba(77, 77, 115, 0.12);
+      --field-shadow: 0 0 0 0 transparent;
+    }
+
+    /* Derived locally — the design has no dark board. Keeps the light theme's
+       layering (background < surface-tertiary < surface-secondary < surface) and
+       holds every text pairing at >= 4.5:1. See tasks.md 2.2 (awaiting design sign-off). */
+    @variant dark {
+      --background: #0f1017;
+      --foreground: #f2f2f7;
+
+      --surface: #252734;
+      --surface-foreground: var(--foreground);
+
+      --surface-secondary: #1f212c;
+      --surface-secondary-foreground: var(--foreground);
+
+      --surface-tertiary: #1a1b25;
+      --surface-tertiary-foreground: var(--foreground);
+
+      --overlay: #252734;
+      --overlay-foreground: var(--foreground);
+      --backdrop: rgba(0, 0, 0, 0.6);
+
+      --muted: #a2a4b4;
+      --muted-tertiary: #8b8d9c;
+
+      --default: #2f3140;
+      --default-foreground: var(--foreground);
+
+      --accent: #8b8fff;
+      --accent-foreground: #0f1017;
+
+      --success: #7cc784;
+      --success-foreground: #0f1017;
+
+      --warning: #ffb45c;
+      --warning-foreground: #0f1017;
+
+      --danger: #ff6b6b;
+      --danger-foreground: #0f1017;
+
+      --segment: #2f3140;
+      --segment-foreground: var(--foreground);
+
+      --border: #33354a;
+      --separator: #2b2d3c;
+      --focus: var(--accent);
+      --link: var(--accent);
+
+      --surface-shadow: 0 0 0 0 transparent;
+      --overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+      --field-shadow: 0 0 0 0 transparent;
+    }
+  }
 }

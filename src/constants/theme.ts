@@ -1,30 +1,14 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
 import { Platform } from 'react-native';
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+/**
+ * Non-color design constants. Colors live in `src/global.css` as HeroUI Native
+ * semantic variables and are consumed through Uniwind class names
+ * (`bg-surface`, `text-muted`, `border-border`), never as JS values.
+ *
+ * `global.css` itself is imported by `src/app/_layout.tsx` — the CSS entry must
+ * hang off the app entry, not off this constants module, or the styles drop out
+ * of the bundle whenever nothing imports these constants.
+ */
 
 export const Fonts = Platform.select({
   ios: {
@@ -43,23 +27,46 @@ export const Fonts = Platform.select({
     rounded: 'normal',
     mono: 'monospace',
   },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
 });
 
+/** Spacing scale, base unit 4. */
 export const Spacing = {
   half: 2,
   one: 4,
   two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
+  three: 12,
+  four: 16,
+  five: 20,
+  six: 24,
+  seven: 28,
+  eight: 32,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/** Horizontal page padding. */
+export const PagePadding = 20;
+/** Gap between top-level page sections. */
+export const SectionGap = 20;
+
+export const CardPadding = {
+  /** Game directory card (board 2:584). */
+  library: 28,
+  /** Conversion chain card (board 2:583). */
+  chain: 16,
+} as const;
+
+/** Gap between rows inside a list. */
+export const ListRowGap = 8;
+
+/**
+ * Max height of the game list inside the directory card, so the primary button
+ * below it stays reachable without scrolling the whole page.
+ */
+export const LibraryListMaxHeight = 320;
+
+/** Floating tab bar geometry (board 2:58). */
+export const TAB_BAR_WIDTH = 350;
+export const TAB_BAR_HEIGHT = 64;
+/** Gap between the floating tab bar and the safe-area bottom edge. */
+export const TAB_BAR_GAP = 12;
+
 export const MaxContentWidth = 800;

@@ -1,0 +1,117 @@
+{
+  "app.name": "Steam Manifest Adapter",
+  "app.tagline": "Adapt existing Steam game folders into a format WinNative recognises",
+
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
+  "common.close": "Close",
+  "common.back": "Back",
+  "common.retry": "Retry",
+  "common.selectAll": "Select all",
+  "common.deselectAll": "Deselect all",
+  "common.loading": "Loading…",
+
+  "tabs.convert": "Convert",
+  "tabs.about": "About",
+
+  "convert.title": "Steam Manifest Adapter",
+  "convert.subtitle": "Adapt existing Steam game folders into a format WinNative recognises",
+  "convert.safetyNote": "Game files and ACF manifests are never modified",
+  "convert.chain.label": "Conversion path",
+  "convert.chain.source": "Source",
+  "convert.chain.target": "Target",
+  "convert.chain.pickSource": "Choose a source",
+  "convert.chain.pickTarget": "Choose a target",
+  "convert.chain.unsupported": "Not supported yet",
+
+  "convert.library.empty.title": "No game folder selected",
+  "convert.library.empty.description": "Pick the folder that holds your Steam games to start scanning",
+  "convert.library.empty.action": "Set game folder",
+  "convert.library.empty.hint": "Usually under storage/",
+
+  "convert.library.scanning.title": "Scanning Steam manifests…",
+  "convert.library.scanning.found": "{{count}} found",
+
+  "convert.library.header.games": "{{count}} games",
+  "convert.library.header.reselect": "Change",
+  "convert.library.header.selected": "{{count}} selected",
+
+  "convert.library.failed.title": "Scan failed",
+  "convert.library.failed.description": "The folder could not be read. Pick the folder again and retry.",
+  "convert.library.failed.action": "Choose folder again",
+
+  "convert.library.noResults.title": "Nothing to adapt",
+  "convert.library.noResults.description": "No adaptable Steam games were found in this folder.",
+  "convert.library.noResults.action": "Choose another folder",
+
+  "convert.library.permissionLost.title": "Folder access expired",
+  "convert.library.permissionLost.description": "Access to this folder was revoked. Grant it again to continue.",
+  "convert.library.permissionLost.action": "Set folder again",
+
+  "convert.action.start": "Adapt selected games ({{count}})",
+  "convert.action.disabledReason": "Select at least one game to continue",
+
+  "convert.progress.title": "Adapting…",
+  "convert.progress.counter": "{{done}} / {{total}}",
+
+  "convert.done.title": "Adaptation complete",
+  "convert.done.viewResults": "View detailed results",
+  "convert.done.viewGuide": "View WinNative setup guide",
+
+  "status.adaptable": "Adaptable",
+  "status.alreadyAdapted": "Already adapted",
+  "status.needsAttention": "Needs attention",
+  "status.notAdaptable": "Cannot adapt",
+  "status.success": "Success",
+  "status.skipped": "Skipped",
+  "status.failed": "Failed",
+
+  "detail.title": "Game check details",
+  "detail.appId": "AppID",
+  "detail.acfFile": "ACF file",
+  "detail.installDir": "Install folder",
+  "detail.checklist": "Checklist",
+  "detail.check.acfReadable": "ACF is readable",
+  "detail.check.appIdValid": "AppID is valid",
+  "detail.check.installDirFound": "Install folder found",
+  "detail.check.downloadComplete": "Download is complete",
+  "detail.check.writable": "Folder is writable",
+
+  "confirm.title": "Adapt these games?",
+  "confirm.description": "Game files and ACF manifests are not modified. Only the files WinNative needs are added.",
+  "confirm.selectedCount": "{{count}} games selected",
+  "confirm.start": "Start",
+
+  "result.title": "Adaptation complete",
+  "result.perItem": "Per-game results",
+  "result.nextSteps": "Next steps",
+  "result.nextSteps.1": "Turn off the shared downloads folder",
+  "result.nextSteps.2": "Point Steam Downloads at steamapps/common",
+  "result.nextSteps.3": "Sign in to Steam and refresh your library",
+
+  "about.title": "About",
+  "about.version": "Version {{version}}",
+  "about.intro": "A local tool that adapts existing Steam game folders so WinNative can recognise them.",
+  "about.supportedChain": "Supported path",
+  "about.help": "Help",
+  "about.help.winnative": "WinNative setup guide",
+  "about.help.gaishi": "Importing from Gaishi Emulator",
+  "about.help.troubleshooting": "Troubleshooting",
+  "about.settings": "Settings",
+  "about.settings.language": "Language",
+  "about.links.github": "GitHub",
+  "about.links.license": "Licence",
+  "about.links.feedback": "Report an issue",
+  "about.disclaimer.title": "Unofficial project",
+  "about.disclaimer.body": "This is an unofficial community project with no affiliation to, endorsement by, or association with Valve/Steam, WinNative, or Gaishi Emulator. All trademarks belong to their respective owners.",
+
+  "settings.language.title": "Language",
+  "settings.language.system": "Follow system",
+  "settings.language.zhHans": "简体中文",
+  "settings.language.en": "English",
+
+  "guide.winnative.title": "WinNative setup guide",
+  "guide.gaishi.title": "Importing from Gaishi Emulator",
+  "guide.troubleshooting.title": "Troubleshooting",
+  "guide.notFound": "This document is unavailable"
+}
