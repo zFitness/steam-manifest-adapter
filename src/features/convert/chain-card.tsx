@@ -1,35 +1,59 @@
 import { Card, Select } from 'heroui-native';
-import type { ReactNode } from 'react';
-import { Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
+import { ChainArrowIcon } from '@/features/convert/chain-icons';
 import {
-  ChainArrowIcon,
-  SourceDeviceIcon,
-  TargetWindowIcon,
-} from '@/features/convert/chain-icons';
+  DEFAULT_SOURCE,
+  DEFAULT_TARGET,
+  SOURCE_PLATFORMS,
+  TARGET_PLATFORMS,
+  type Platform,
+} from '@/features/convert/platforms';
 import { useTranslate } from '@/i18n/provider';
 
-/** The only supported source today. */
-const SOURCE_VALUE = 'gaishi';
-/** The only supported target today. */
-const TARGET_VALUE = 'winnative';
+/**
+ * The platform's own launcher icon, sized for the 36pt tile in `ChainBlock`.
+ * `resizeMode="contain"` keeps a square icon square even if a future entry
+ * ships different proportions.
+ */
+function PlatformIcon({
+  platform,
+  size = 28,
+}: {
+  platform: Platform;
+  size?: number;
+}) {
+  if (!platform.icon) {
+    return null;
+  }
+  return (
+    <Image
+      source={platform.icon}
+      style={{ width: size, height: size, borderRadius: size / 4 }}
+      resizeMode="contain"
+      // The label sits right next to the icon, so it carries no extra meaning.
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+    />
+  );
+}
 
 function ChainBlock({
   label,
-  icon,
+  platform,
   children,
 }: {
   label: string;
-  icon: ReactNode;
-  children: ReactNode;
+  platform: Platform;
+  children: React.ReactNode;
 }) {
   return (
     <View className="flex-1 gap-1.5 rounded-xl bg-background p-2.5">
       <Text className="text-[11px] text-muted-tertiary">{label}</Text>
       <View className="items-center gap-1.5">
-        <View className="h-9 w-9 items-center justify-center rounded-[10px] bg-surface">
-          {icon}
+        <View className="h-9 w-9 items-center justify-center overflow-hidden rounded-[10px] bg-surface">
+          <PlatformIcon platform={platform} />
         </View>
         {children}
       </View>
@@ -38,31 +62,72 @@ function ChainBlock({
 }
 
 /**
+ * One row inside a picker. Supported platforms are real `Select.Item`s;
+ * unsupported ones are inert rows that say why in words, because the
+ * primitive's Item has no disabled state and dimming alone is not a reason.
+ */
+function PlatformOption({ platform }: { platform: Platform }) {
+  const t = useTranslate();
+  const label = t(platform.labelKey);
+
+  if (!platform.supported) {
+    return (
+      <View
+        accessibilityRole="text"
+        className="flex-row items-center justify-between gap-2 px-3 py-2.5 opacity-50"
+      >
+        <View className="flex-row items-center gap-2">
+          <PlatformIcon platform={platform} size={20} />
+          <Text className="text-[13px] text-foreground">{label}</Text>
+        </View>
+        <Text className="text-[11px] text-muted">
+          {t('convert.chain.unsupported')}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Select.Item value={platform.id} label={label}>
+      <View className="flex-row items-center gap-2">
+        <PlatformIcon platform={platform} size={20} />
+        <Select.ItemLabel />
+      </View>
+      <Select.ItemIndicator />
+    </Select.Item>
+  );
+}
+
+/**
  * Conversion chain card (board 2:482): which platform the games come from and
  * which one they are being adapted for.
  *
- * Both pickers use `presentation="popover"`; `@gorhom/bottom-sheet` is not
- * installed, so the sheet-backed presentations would fail at runtime only.
+ * The platform list — names and icons — lives in `platforms.ts`; this component
+ * only lays it out. Both pickers use `presentation="popover"`;
+ * `@gorhom/bottom-sheet` is not installed, so the sheet-backed presentations
+ * would fail at runtime only.
  */
 export function ChainCard() {
   const t = useTranslate();
-  // SVG strokes need literal colours, so these tokens are read rather than
-  // applied as classes like everything else.
-  const accent = String(useCSSVariable('--accent') ?? '#5B5FEF');
+  // The SVG arrow needs a literal colour, so this token is read rather than
+  // applied as a class like everything else.
   const mutedTertiary = String(useCSSVariable('--muted-tertiary') ?? '#747584');
 
   return (
     <Card className="gap-2.5 rounded-2xl border border-border bg-surface p-4">
-      <Text className="text-xs text-muted">{t('convert.chain.label')}</Text>
+      {/* <Text className="text-xs text-muted">{t('convert.chain.label')}</Text> */}
 
       <View className="flex-row items-center gap-2">
         <ChainBlock
           label={t('convert.chain.source')}
-          icon={<SourceDeviceIcon color={accent} />}
+          platform={DEFAULT_SOURCE}
         >
           <Select
-            value={{ value: SOURCE_VALUE, label: t('convert.platform.gaishi') }}
-            onValueChange={() => {}}
+            value={{
+              value: DEFAULT_SOURCE.id,
+              label: t(DEFAULT_SOURCE.labelKey),
+            }}
+            onValueChange={() => { }}
           >
             <Select.Trigger className="w-full">
               <Select.Value
@@ -73,10 +138,9 @@ export function ChainCard() {
             <Select.Portal>
               <Select.Overlay />
               <Select.Content presentation="popover">
-                <Select.Item
-                  value={SOURCE_VALUE}
-                  label={t('convert.platform.gaishi')}
-                />
+                {SOURCE_PLATFORMS.map((platform) => (
+                  <PlatformOption key={platform.id} platform={platform} />
+                ))}
               </Select.Content>
             </Select.Portal>
           </Select>
@@ -88,11 +152,14 @@ export function ChainCard() {
 
         <ChainBlock
           label={t('convert.chain.target')}
-          icon={<TargetWindowIcon color={accent} />}
+          platform={DEFAULT_TARGET}
         >
           <Select
-            value={{ value: TARGET_VALUE, label: t('convert.platform.winnative') }}
-            onValueChange={() => {}}
+            value={{
+              value: DEFAULT_TARGET.id,
+              label: t(DEFAULT_TARGET.labelKey),
+            }}
+            onValueChange={() => { }}
           >
             <Select.Trigger className="w-full">
               <Select.Value
@@ -103,25 +170,9 @@ export function ChainCard() {
             <Select.Portal>
               <Select.Overlay />
               <Select.Content presentation="popover">
-                <Select.Item
-                  value={TARGET_VALUE}
-                  label={t('convert.platform.winnative')}
-                />
-
-                {/* GameNative is not supported yet. The primitive's Item has no
-                    disabled state, so this is a plain row with no handler — the
-                    reason is spelled out in words, not conveyed by opacity. */}
-                <View
-                  accessibilityRole="text"
-                  className="flex-row items-center justify-between gap-2 px-3 py-2.5 opacity-50"
-                >
-                  <Text className="text-[13px] text-foreground">
-                    {t('convert.platform.gamenative')}
-                  </Text>
-                  <Text className="text-[11px] text-muted">
-                    {t('convert.chain.unsupported')}
-                  </Text>
-                </View>
+                {TARGET_PLATFORMS.map((platform) => (
+                  <PlatformOption key={platform.id} platform={platform} />
+                ))}
               </Select.Content>
             </Select.Portal>
           </Select>
