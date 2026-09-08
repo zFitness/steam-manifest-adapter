@@ -32,7 +32,8 @@ export type ConvertState = {
 };
 
 export type ConvertEvent =
-  | { type: 'pick-directory' }
+  | { type: 'pick-directory'; directory: string }
+  | { type: 'pick-directory-failed' }
   | { type: 'scan-succeeded'; games: FixtureGame[] }
   | { type: 'scan-found-nothing' }
   | { type: 'scan-failed' }
@@ -106,7 +107,10 @@ function devState(status: ConvertStatus): ConvertState {
 export function convertReducer(state: ConvertState, event: ConvertEvent): ConvertState {
   switch (event.type) {
     case 'pick-directory':
-      return { ...initialConvertState, status: 'scanning', directory: FIXTURE_DIRECTORY };
+      return { ...initialConvertState, status: 'scanning', directory: event.directory };
+
+    case 'pick-directory-failed':
+      return { ...initialConvertState, status: 'no-directory' };
 
     case 'scan-succeeded':
       return {

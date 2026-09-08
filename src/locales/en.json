@@ -32,6 +32,7 @@
   "convert.library.empty.description": "Pick the folder that holds your Steam games to start scanning",
   "convert.library.empty.action": "Set game folder",
   "convert.library.empty.hint": "Usually under storage/",
+  "convert.library.empty.permissionDenied": "Access to that folder was not granted. Please try again.",
 
   "convert.library.scanning.title": "Scanning Steam manifests…",
   "convert.library.scanning.found": { "one": "{{count}} found", "other": "{{count}} found" },

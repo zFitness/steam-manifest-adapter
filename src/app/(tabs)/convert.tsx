@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useState } from 'react';
+import { useCallback, useReducer, useRef, useState } from 'react';
 import { Button, Dialog } from 'heroui-native';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,8 +14,12 @@ import {
 } from '@/features/convert/convert-state';
 import { DevStateSwitcher } from '@/features/convert/dev-state-switcher';
 import { LibraryCard } from '@/features/convert/library-card';
+import { writeDirectory } from '@/features/storage-access/directory-store';
+import { createSafStorageAccess } from '@/features/storage-access/saf-storage';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTranslate } from '@/i18n/provider';
+
+const storageAccess = createSafStorageAccess();
 
 export default function ConvertScreen() {
   const t = useTranslate();
@@ -23,6 +27,10 @@ export default function ConvertScreen() {
   const [state, dispatch] = useReducer(convertReducer, initialConvertState);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelledMessage, setCancelledMessage] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  // The picker is a system activity; a second tap while it is up would launch
+  // a second one. A ref (not state) because this must not trigger a re-render.
+  const pickInFlight = useRef(false);
   const mutedTertiary = String(useCSSVariable('--muted-tertiary') ?? '#747584');
 
   const isBusy = state.status === 'converting';
@@ -33,14 +41,42 @@ export default function ConvertScreen() {
   const canConvert =
     state.status === 'scanned-has-adaptable' && state.selected.length > 0;
 
-  const handlePickDirectory = useCallback(() => {
-    setCancelledMessage(false);
-    dispatch({ type: 'pick-directory' });
+  const handlePickDirectory = useCallback(async () => {
+    if (pickInFlight.current) {
+      return;
+    }
+    pickInFlight.current = true;
+
+    try {
+      const picked = await storageAccess.pickDirectory();
+
+      // Cancelling is not an error: leave every bit of state as it was, so the
+      // card stays exactly where the user left it.
+      if (picked === null) {
+        return;
+      }
+
+      setCancelledMessage(false);
+      setPermissionDenied(false);
+      // Only the opaque URI is persisted. Losing the write costs the directory
+      // on the next cold start but must not interrupt this session.
+      await writeDirectory(picked.uri);
+      // The readable name is what reaches the card — never the `content://` URI.
+      dispatch({ type: 'pick-directory', directory: picked.name });
+    } catch {
+      // The grant did not happen. Nothing was persisted; offer a retry.
+      setCancelledMessage(false);
+      setPermissionDenied(true);
+      dispatch({ type: 'pick-directory-failed' });
+    } finally {
+      pickInFlight.current = false;
+    }
   }, []);
 
   const handleCancelScan = useCallback(() => {
     dispatch({ type: 'reset' });
     setCancelledMessage(true);
+    setPermissionDenied(false);
   }, []);
 
   const handleToggleGame = useCallback((id: string) => {
@@ -59,6 +95,7 @@ export default function ConvertScreen() {
   const handleDevGoto = useCallback(
     (status: ConvertStatus) => {
       setCancelledMessage(false);
+      setPermissionDenied(false);
       dispatch({ type: 'dev-goto', status });
     },
     [],
@@ -109,6 +146,14 @@ export default function ConvertScreen() {
           {cancelledMessage ? (
             <Text className="text-xs text-muted-tertiary px-1">
               {t('convert.library.scanning.cancelled')}
+            </Text>
+          ) : null}
+
+          {/* A refused grant is retryable, so it is an inline hint rather than
+              an interrupting dialog. */}
+          {permissionDenied ? (
+            <Text className="text-xs text-muted-tertiary px-1">
+              {t('convert.library.empty.permissionDenied')}
             </Text>
           ) : null}
 

@@ -1,4 +1,4 @@
-import { FIXTURE_GAMES } from '@/fixtures/games';
+import { FIXTURE_DIRECTORY, FIXTURE_GAMES } from '@/fixtures/games';
 
 import {
   convertReducer,
@@ -37,6 +37,64 @@ describe('convertReducer', () => {
       const next = convertReducer(initialConvertState, { type: 'dev-goto', status });
       expect(next.status).toBe(status);
     }
+  });
+
+  describe('picking a directory', () => {
+    const PICKED = 'content://com.android.externalstorage.documents/tree/primary%3AGames';
+
+    it('enters scanning with the directory it was handed', () => {
+      const state = convertReducer(initialConvertState, {
+        type: 'pick-directory',
+        directory: PICKED,
+      });
+
+      expect(state.status).toBe('scanning');
+      expect(state.directory).toBe(PICKED);
+    });
+
+    // The reducer must not substitute a built-in path for the one the user chose.
+    it('does not fall back to the fixture directory', () => {
+      const state = convertReducer(initialConvertState, {
+        type: 'pick-directory',
+        directory: PICKED,
+      });
+
+      expect(state.directory).not.toBe(FIXTURE_DIRECTORY);
+    });
+
+    it('starts scanning from a clean slate when re-picking after a scan', () => {
+      const state = convertReducer(scanned(), {
+        type: 'pick-directory',
+        directory: PICKED,
+      });
+
+      expect(state.status).toBe('scanning');
+      expect(state.directory).toBe(PICKED);
+      // A stale list must not show through the scanning state.
+      expect(state.games).toEqual([]);
+      expect(state.selected).toEqual([]);
+      expect(state.summary).toBeNull();
+    });
+
+    it('returns to no-directory when the grant fails, keeping no directory', () => {
+      const state = convertReducer(initialConvertState, {
+        type: 'pick-directory-failed',
+      });
+
+      expect(state.status).toBe('no-directory');
+      expect(state.directory).toBeNull();
+    });
+
+    // A failed grant must not leave a half-populated card behind.
+    it('drops any previous scan result when the grant fails', () => {
+      const state = convertReducer(scanned(), { type: 'pick-directory-failed' });
+
+      expect(state.status).toBe('no-directory');
+      expect(state.directory).toBeNull();
+      expect(state.games).toEqual([]);
+      expect(state.selected).toEqual([]);
+      expect(state.summary).toBeNull();
+    });
   });
 
   describe('default selection', () => {

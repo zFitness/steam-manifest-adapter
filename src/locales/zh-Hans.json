@@ -32,6 +32,7 @@
   "convert.library.empty.description": "选择存放 Steam 游戏的目录后即可开始扫描",
   "convert.library.empty.action": "设置游戏目录",
   "convert.library.empty.hint": "通常位于 storage/ 下",
+  "convert.library.empty.permissionDenied": "未获得该目录的访问授权，请重新选择",
 
   "convert.library.scanning.title": "正在扫描 Steam 游戏清单…",
   "convert.library.scanning.found": "已发现 {{count}} 个",
