@@ -24,8 +24,31 @@ import {
 
 const i18n = new I18n(
   { en, 'zh-Hans': zhHans },
-  { defaultLocale: FALLBACK_LOCALE, enableFallback: true },
+  {
+    defaultLocale: FALLBACK_LOCALE,
+    enableFallback: true,
+    // i18n-js splits the scope on `defaultSeparator` (default `"."`) and walks
+    // a nested object tree. Our catalogues use flat dotted keys (e.g.
+    // `"about.title": "..."`), so splitting would produce
+    // `translations['zh-Hans']['about']` → undefined.  Setting the separator to
+    // a NUL char makes `t(key)` treat the whole key as a literal lookup.
+    // If you change this back to `"."`, you must also convert the JSON
+    // catalogues to nested objects, which requires renaming 7 keys that have
+    // path collisions (see `result.nextSteps` / `about.help` / `about.settings`
+    // and their children).
+    defaultSeparator: '\u0000',
+  },
 );
+
+// Custom missing-translation strategy: readable in dev, silent in prod.
+// The default `messageStrategy` uses `defaultSeparator` to join locale + scope,
+// which would produce invisible characters with the NUL separator above.
+i18n.missingTranslation.register('readable', (_i18n, scope) =>
+  __DEV__ ? `[MISSING] ${String(scope)}` : '',
+);
+i18n.missingBehavior = 'readable';
+
+export { i18n };
 
 export type TranslateOptions = Record<string, unknown>;
 
@@ -85,8 +108,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       // `locale` is passed per call rather than mutating `i18n.locale`, so this
       // stays a pure render and the memo key (resolvedLocale) is what drives
       // consumers to re-render on a language switch.
+      // `locale` is spread last so a caller cannot override the resolved one.
+      // Note: `options.scope` is unusable here because i18n-js joins it with
+      // `defaultSeparator`, which is a NUL char (see the I18n construction).
       t: (key: string, options?: TranslateOptions) =>
-        i18n.t(key, { locale: resolvedLocale, ...options }),
+        i18n.t(key, { ...options, locale: resolvedLocale }),
       isReady,
     }),
     [preference, resolvedLocale, setPreference, isReady],

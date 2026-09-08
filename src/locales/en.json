@@ -30,11 +30,11 @@
   "convert.library.empty.hint": "Usually under storage/",
 
   "convert.library.scanning.title": "Scanning Steam manifests…",
-  "convert.library.scanning.found": "{{count}} found",
+  "convert.library.scanning.found": { "one": "{{count}} found", "other": "{{count}} found" },
 
-  "convert.library.header.games": "{{count}} games",
+  "convert.library.header.games": { "one": "{{count}} game", "other": "{{count}} games" },
   "convert.library.header.reselect": "Change",
-  "convert.library.header.selected": "{{count}} selected",
+  "convert.library.header.selected": { "one": "{{count}} selected", "other": "{{count}} selected" },
 
   "convert.library.failed.title": "Scan failed",
   "convert.library.failed.description": "The folder could not be read. Pick the folder again and retry.",
@@ -48,7 +48,7 @@
   "convert.library.permissionLost.description": "Access to this folder was revoked. Grant it again to continue.",
   "convert.library.permissionLost.action": "Set folder again",
 
-  "convert.action.start": "Adapt selected games ({{count}})",
+  "convert.action.start": { "one": "Adapt selected game ({{count}})", "other": "Adapt selected games ({{count}})" },
   "convert.action.disabledReason": "Select at least one game to continue",
 
   "convert.progress.title": "Adapting…",
@@ -79,7 +79,7 @@
 
   "confirm.title": "Adapt these games?",
   "confirm.description": "Game files and ACF manifests are not modified. Only the files WinNative needs are added.",
-  "confirm.selectedCount": "{{count}} games selected",
+  "confirm.selectedCount": { "one": "{{count}} game selected", "other": "{{count}} games selected" },
   "confirm.start": "Start",
 
   "result.title": "Adaptation complete",
