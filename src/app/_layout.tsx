@@ -32,9 +32,18 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <I18nProvider>
+      {/*
+        `I18nProvider` must sit above `HeroUINativeProvider`: the latter renders
+        heroui's `PortalHost`, and heroui's `Portal` is not a React portal — it
+        stores its children in an external store and re-renders them under the
+        host. Portalled content (e.g. `Select.Content`) therefore reads context
+        from the host's position in the tree, not from where it was written, so
+        anything calling `useI18n()` inside a portal throws unless the provider
+        is an ancestor of `PortalHost`.
+      */}
+      <I18nProvider>
+        <HeroUINativeProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <SplashGate />
             <AnimatedSplashOverlay />
             <Stack screenOptions={{ headerShown: false }}>
@@ -44,9 +53,9 @@ export default function RootLayout() {
               <Stack.Screen name="guide/[slug]" />
               <Stack.Screen name="settings/language" />
             </Stack>
-          </I18nProvider>
-        </ThemeProvider>
-      </HeroUINativeProvider>
+          </ThemeProvider>
+        </HeroUINativeProvider>
+      </I18nProvider>
     </GestureHandlerRootView>
   );
 }
