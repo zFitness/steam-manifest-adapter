@@ -1,6 +1,5 @@
 import { useCallback, useReducer, useRef, useState } from 'react';
 import { Button, Dialog } from 'heroui-native';
-import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
@@ -15,7 +14,6 @@ import {
 import { LibraryCard } from '@/features/convert/library-card';
 import { convertGames } from '@/features/conversion/converter';
 import { createExpoFsWriter } from '@/features/conversion/expo-fs-writer';
-import { setLastResults } from '@/features/conversion/results-store';
 import { createExpoFs } from '@/features/library-scan/expo-fs';
 import { scanLibrary } from '@/features/library-scan/scanner';
 import { writeDirectory } from '@/features/storage-access/directory-store';
@@ -216,9 +214,6 @@ export default function ConvertScreen() {
         },
       });
 
-      // Stashed before the dispatch so the results route can never read a state
-      // the card has already moved past.
-      setLastResults(run.results);
       dispatch({
         type: 'conversion-finished',
         results: run.results,
@@ -228,10 +223,6 @@ export default function ConvertScreen() {
       convertInFlight.current = false;
     }
   }, [state.games, state.selected]);
-
-  const handleViewResults = useCallback(() => {
-    router.push('/conversion-result');
-  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
@@ -261,7 +252,6 @@ export default function ConvertScreen() {
             onCancelScan={handleCancelScan}
             onToggleGame={handleToggleGame}
             onToggleAll={handleToggleAll}
-            onViewResults={handleViewResults}
           />
 
           {state.status === 'no-directory' ? (

@@ -1,7 +1,6 @@
 {
   "app.name": "Steam Manifest Adapter",
   "app.tagline": "Adapt existing Steam game folders into a format WinNative recognises",
-
   "common.cancel": "Cancel",
   "common.confirm": "Confirm",
   "common.close": "Close",
@@ -10,10 +9,8 @@
   "common.selectAll": "Select all",
   "common.deselectAll": "Deselect all",
   "common.loading": "Loading…",
-
   "tabs.convert": "Convert",
   "tabs.about": "About",
-
   "convert.title": "Steam Manifest Adapter",
   "convert.subtitle": "Adapt existing Steam game folders into a format WinNative recognises",
   "convert.safetyNote": "Game files and ACF manifests are never modified",
@@ -23,28 +20,35 @@
   "convert.chain.pickSource": "Choose a source",
   "convert.chain.pickTarget": "Choose a target",
   "convert.chain.unsupported": "Not supported yet",
-
   "convert.platform.gaishi": "Gaishi Emulator",
   "convert.platform.winnative": "WinNative",
   "convert.platform.gamenative": "GameNative",
-
   "convert.library.empty.title": "No game folder selected",
   "convert.library.empty.description": "Pick the folder that holds your Steam games to start scanning",
   "convert.library.empty.action": "Set game folder",
   "convert.library.empty.hint": "For GameSir emulator, select the ../steamapps folder",
   "convert.library.empty.permissionDenied": "Access to that folder was not granted. Please try again.",
-
   "convert.library.scanning.title": "Scanning Steam manifests…",
-  "convert.library.scanning.found": { "one": "{{count}} found", "other": "{{count}} found" },
+  "convert.library.scanning.found": {
+    "one": "{{count}} found",
+    "other": "{{count}} found"
+  },
   "convert.library.scanning.cancel": "Cancel scan",
   "convert.library.scanning.cancelled": "Scan cancelled",
-
-  "convert.library.header.games": { "one": "{{count}} game", "other": "{{count}} games" },
-  "convert.library.header.adaptable": { "one": "{{count}} adaptable", "other": "{{count}} adaptable" },
+  "convert.library.header.games": {
+    "one": "{{count}} game",
+    "other": "{{count}} games"
+  },
+  "convert.library.header.adaptable": {
+    "one": "{{count}} adaptable",
+    "other": "{{count}} adaptable"
+  },
   "convert.library.header.reselect": "Change",
-  "convert.library.header.selected": { "one": "{{count}} selected", "other": "{{count}} selected" },
+  "convert.library.header.selected": {
+    "one": "{{count}} selected",
+    "other": "{{count}} selected"
+  },
   "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
-
   "convert.reason.already-marked": "Already has the WinNative marker, nothing to do",
   "convert.reason.state-flags-incomplete": "May not have finished downloading; verify it in Steam first",
   "convert.reason.dir-name-mismatch": "Folder name differs from the manifest; rename it to match",
@@ -54,30 +58,24 @@
   "convert.reason.manifest-unreadable": "The manifest could not be read or is malformed",
   "convert.reason.manifest-missing-fields": "The manifest is missing required fields",
   "convert.reason.manifest-invalid-installdir": "The install folder in the manifest is not valid",
-
   "convert.library.failed.title": "Scan failed",
   "convert.library.failed.description": "The folder could not be read. Pick the folder again and retry.",
   "convert.library.failed.action": "Choose folder again",
-
   "convert.library.noResults.title": "Nothing to adapt",
   "convert.library.noResults.description": "No adaptable Steam games were found in this folder. Make sure the folder you picked directly contains appmanifest_*.acf files.",
   "convert.library.noResults.action": "Choose another folder",
-
   "convert.library.permissionLost.title": "Folder access expired",
   "convert.library.permissionLost.description": "Access to this folder was revoked. Grant it again to continue.",
   "convert.library.permissionLost.action": "Set folder again",
-
-  "convert.action.start": { "one": "Adapt selected game ({{count}})", "other": "Adapt selected games ({{count}})" },
+  "convert.action.start": {
+    "one": "Adapt selected game ({{count}})",
+    "other": "Adapt selected games ({{count}})"
+  },
   "convert.action.disabledReason": "Select at least one game to continue",
-
   "convert.progress.title": "Adapting…",
   "convert.progress.counter": "{{done}} / {{total}}",
-
   "convert.done.title": "Adaptation complete",
   "convert.done.summaryItem": "{{label}} {{count}}",
-  "convert.done.viewResults": "View detailed results",
-  "convert.done.viewGuide": "View WinNative setup guide",
-
   "status.adaptable": "Adaptable",
   "status.alreadyAdapted": "Already adapted",
   "status.needsAttention": "Needs attention",
@@ -85,46 +83,15 @@
   "status.success": "Success",
   "status.skipped": "Skipped",
   "status.failed": "Failed",
-
-  "detail.title": "Game check details",
-  "detail.appId": "AppID",
-  "detail.acfFile": "ACF file",
-  "detail.installDir": "Install folder",
-  "detail.checklist": "Checklist",
-  "detail.check.acfReadable": "ACF is readable",
-  "detail.check.appIdValid": "AppID is valid",
-  "detail.check.installDirFound": "Install folder found",
-  "detail.check.downloadComplete": "Download is complete",
-  "detail.check.writable": "Folder is writable",
-
   "confirm.title": "Adapt these games?",
   "confirm.description": "Game files and ACF manifests are not modified. Only the files WinNative needs are added.",
-  "confirm.selectedCount": { "one": "{{count}} game selected", "other": "{{count}} games selected" },
+  "confirm.selectedCount": {
+    "one": "{{count}} game selected",
+    "other": "{{count}} games selected"
+  },
   "confirm.start": "Start",
-
-  "result.title": "Adaptation complete",
-  "result.perItem": "Per-game results",
-  "result.nextSteps": "Next steps",
-  "result.nextSteps.1": "Turn off the shared downloads folder",
-  "result.nextSteps.2": "Point Steam Downloads at steamapps/common",
-  "result.nextSteps.3": "Sign in to Steam and refresh your library",
-  "result.reason.not-adaptable": "This game does not meet the requirements; nothing was changed",
-  "result.reason.invalid-installdir": "The install folder in the manifest is not valid; nothing was changed",
-  "result.reason.dir-missing": "The game folder could not be found; it may have been moved or deleted",
-  "result.reason.already-marked": "The marker is already there, so nothing was written",
-  "result.reason.delete-marker-failed": "The leftover download marker could not be removed",
-  "result.reason.create-marker-failed": "The marker could not be written",
-  "result.reason.marker-name-mismatch": "The system renamed the marker, so it will not be recognised",
-  "result.reason.read-only": "The folder is not writable",
-  "result.reason.no-space": "Not enough free space",
-  "result.reason.storage-unavailable": "The storage is unreachable; it may have been removed or unmounted",
-  "result.reason.permission-revoked": "Folder access expired",
-  "result.reason.io-error": "A read or write error occurred",
-  "result.rollback.restored": "This folder was left as it was found",
-  "result.rollback.incomplete": "This folder could not be fully restored; check it manually",
   "convert.library.permissionLostDuringConvert.title": "Adaptation stopped: folder access expired",
   "convert.library.permissionLostDuringConvert.description": "Access to this folder was revoked while adapting, so the remaining games were not processed. What finished is shown below; set the folder again to continue.",
-
   "about.title": "About",
   "about.version": "{{version}}",
   "about.appInfo": "App info",
@@ -142,12 +109,10 @@
   "about.links.github": "GitHub",
   "about.links.license": "Licence",
   "about.links.feedback": "Report an issue",
-
   "settings.language.title": "Language",
   "settings.language.system": "Follow system",
   "settings.language.zhHans": "简体中文",
   "settings.language.en": "English",
-
   "help.title": "Help",
   "help.gaishi.title": "GameSir Emulator setup",
   "help.gaishi.step1": "1. Select the /storage external storage",

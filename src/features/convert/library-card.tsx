@@ -15,7 +15,6 @@ type LibraryCardProps = {
   onCancelScan: () => void;
   onToggleGame: (id: string) => void;
   onToggleAll: () => void;
-  onViewResults: () => void;
 };
 
 /** Pill button used by the card's own actions (board 2:503 / 2:521). */
@@ -119,10 +118,8 @@ function ListHeader({
 /** Four-way outcome summary shown after a run (task 4.5). */
 function ConvertedSummary({
   summary,
-  onViewResults,
 }: {
   summary: NonNullable<ConvertState['summary']>;
-  onViewResults: () => void;
 }) {
   const t = useTranslate();
 
@@ -153,10 +150,6 @@ function ConvertedSummary({
           </Text>
         ))}
       </View>
-
-      <Button variant="ghost" size="sm" onPress={onViewResults} className="self-start">
-        {t('convert.done.viewResults')}
-      </Button>
     </View>
   );
 }
@@ -171,7 +164,6 @@ export function LibraryCard({
   onCancelScan,
   onToggleGame,
   onToggleAll,
-  onViewResults,
 }: LibraryCardProps) {
   const t = useTranslate();
   const folderStroke = String(useCSSVariable('--muted-tertiary') ?? '#747584');
@@ -288,9 +280,7 @@ export function LibraryCard({
             }
           />
 
-          {state.summary ? (
-            <ConvertedSummary summary={state.summary} onViewResults={onViewResults} />
-          ) : null}
+          {state.summary ? <ConvertedSummary summary={state.summary} /> : null}
         </View>
       ) : null}
 
@@ -323,7 +313,7 @@ export function LibraryCard({
           ) : null}
 
           {state.status === 'converted' && state.summary ? (
-            <ConvertedSummary summary={state.summary} onViewResults={onViewResults} />
+            <ConvertedSummary summary={state.summary} />
           ) : null}
 
           {/* Only the list scrolls, so the primary button below the card stays

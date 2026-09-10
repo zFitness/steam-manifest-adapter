@@ -1,7 +1,6 @@
 {
-  "app.name": "Steam 清单适配器",
+  "app.name": "Steam Manifest Adapter",
   "app.tagline": "将已有 Steam 游戏目录适配为 WinNative 可识别的格式",
-
   "common.cancel": "取消",
   "common.confirm": "确认",
   "common.close": "关闭",
@@ -10,11 +9,9 @@
   "common.selectAll": "全选",
   "common.deselectAll": "取消全选",
   "common.loading": "加载中…",
-
   "tabs.convert": "转换",
   "tabs.about": "关于",
-
-  "convert.title": "Steam 清单适配器",
+  "convert.title": "Steam Manifest Adapter",
   "convert.subtitle": "将已有 Steam 游戏目录适配为 WinNative 可识别的格式",
   "convert.safetyNote": "不会修改游戏文件和 ACF 清单",
   "convert.chain.label": "转换链路",
@@ -23,28 +20,23 @@
   "convert.chain.pickSource": "选择来源",
   "convert.chain.pickTarget": "选择目标",
   "convert.chain.unsupported": "暂不支持",
-
   "convert.platform.gaishi": "盖世模拟器",
   "convert.platform.winnative": "WinNative",
   "convert.platform.gamenative": "GameNative",
-
   "convert.library.empty.title": "未选择游戏目录",
   "convert.library.empty.description": "选择存放 Steam 游戏的目录后即可开始扫描",
   "convert.library.empty.action": "设置游戏目录",
   "convert.library.empty.hint": "盖世模拟器请选择 ../steamapps 目录",
   "convert.library.empty.permissionDenied": "未获得该目录的访问授权，请重新选择",
-
   "convert.library.scanning.title": "正在扫描 Steam 游戏清单…",
   "convert.library.scanning.found": "已发现 {{count}} 个",
   "convert.library.scanning.cancel": "取消扫描",
   "convert.library.scanning.cancelled": "已取消本次扫描",
-
   "convert.library.header.games": "{{count}} 个游戏",
   "convert.library.header.adaptable": "可适配 {{count}}",
   "convert.library.header.reselect": "重新选择",
   "convert.library.header.selected": "已选 {{count}} 个",
   "convert.library.row.meta": "AppID {{appId}} · {{installDir}}",
-
   "convert.reason.already-marked": "已有 WinNative 识别标记，无需再次适配",
   "convert.reason.state-flags-incomplete": "可能未下载完成或正在更新，建议先在 Steam 中校验",
   "convert.reason.dir-name-mismatch": "游戏目录名与清单不一致，需自行改成清单中的名称",
@@ -54,30 +46,21 @@
   "convert.reason.manifest-unreadable": "清单无法读取或格式不正确",
   "convert.reason.manifest-missing-fields": "清单缺少必需字段",
   "convert.reason.manifest-invalid-installdir": "清单中的安装目录不合法",
-
   "convert.library.failed.title": "扫描失败",
   "convert.library.failed.description": "无法读取该目录，请重新选择目录后再试。",
   "convert.library.failed.action": "重新选择目录",
-
   "convert.library.noResults.title": "没有可适配的游戏",
   "convert.library.noResults.description": "该目录下未找到可适配的 Steam 游戏。请确认所选目录直接包含 appmanifest_*.acf 清单文件。",
   "convert.library.noResults.action": "选择其他目录",
-
   "convert.library.permissionLost.title": "目录授权已失效",
   "convert.library.permissionLost.description": "该目录的访问授权已被取消，请重新授权后继续。",
   "convert.library.permissionLost.action": "重新设置目录",
-
   "convert.action.start": "转换已选游戏（{{count}}）",
   "convert.action.disabledReason": "请至少选择一个游戏",
-
   "convert.progress.title": "正在适配…",
   "convert.progress.counter": "{{done}} / {{total}}",
-
   "convert.done.title": "适配完成",
   "convert.done.summaryItem": "{{label}} {{count}}",
-  "convert.done.viewResults": "查看详细结果",
-  "convert.done.viewGuide": "查看 WinNative 设置指引",
-
   "status.adaptable": "可适配",
   "status.alreadyAdapted": "已适配",
   "status.needsAttention": "需要注意",
@@ -85,46 +68,12 @@
   "status.success": "成功",
   "status.skipped": "跳过",
   "status.failed": "失败",
-
-  "detail.title": "游戏检查详情",
-  "detail.appId": "AppID",
-  "detail.acfFile": "ACF 文件",
-  "detail.installDir": "安装目录",
-  "detail.checklist": "检查清单",
-  "detail.check.acfReadable": "ACF 可读取",
-  "detail.check.appIdValid": "AppID 有效",
-  "detail.check.installDirFound": "找到对应的游戏目录",
-  "detail.check.downloadComplete": "下载状态已完成",
-  "detail.check.writable": "目录具有写入权限",
-
   "confirm.title": "确认适配游戏？",
   "confirm.description": "不会修改游戏文件和 ACF 清单，仅补充 WinNative 需要的文件。",
   "confirm.selectedCount": "已选中 {{count}} 个游戏",
   "confirm.start": "开始适配",
-
-  "result.title": "适配完成",
-  "result.perItem": "逐项结果",
-  "result.nextSteps": "后续步骤",
-  "result.nextSteps.1": "关闭共享下载文件夹",
-  "result.nextSteps.2": "将 Steam Downloads 指向 steamapps/common",
-  "result.nextSteps.3": "登录 Steam 并刷新游戏库",
-  "result.reason.not-adaptable": "该游戏不满足适配条件，未作任何改动",
-  "result.reason.invalid-installdir": "清单中的安装目录不合法，未作任何改动",
-  "result.reason.dir-missing": "找不到对应的游戏目录，可能已被移动或删除",
-  "result.reason.already-marked": "已有识别标记，无需重复写入",
-  "result.reason.delete-marker-failed": "未能清除残留的下载标记",
-  "result.reason.create-marker-failed": "未能写入识别标记",
-  "result.reason.marker-name-mismatch": "识别标记被系统改名，无法被识别",
-  "result.reason.read-only": "目录不可写",
-  "result.reason.no-space": "存储空间不足",
-  "result.reason.storage-unavailable": "存储不可访问，可能已被拔出或卸载",
-  "result.reason.permission-revoked": "目录授权已失效",
-  "result.reason.io-error": "读写出错",
-  "result.rollback.restored": "该目录已恢复原状",
-  "result.rollback.incomplete": "该目录未能完全恢复，建议手动检查",
   "convert.library.permissionLostDuringConvert.title": "适配中断：目录授权已失效",
   "convert.library.permissionLostDuringConvert.description": "适配过程中该目录的访问授权被取消，剩余游戏未处理。已完成的结果见下方，请重新设置目录后继续。",
-
   "about.title": "关于",
   "about.version": "{{version}}",
   "about.appInfo": "应用信息",
@@ -142,12 +91,10 @@
   "about.links.github": "GitHub",
   "about.links.license": "许可证",
   "about.links.feedback": "问题反馈",
-
   "settings.language.title": "语言",
   "settings.language.system": "跟随系统",
   "settings.language.zhHans": "简体中文",
   "settings.language.en": "English",
-
   "help.title": "帮助文档",
   "help.gaishi.title": "盖世模拟器设置",
   "help.gaishi.step1": "1. 选择 /storage 外部存储",

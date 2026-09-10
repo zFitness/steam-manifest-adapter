@@ -48,8 +48,6 @@ export default function RootLayout() {
             <AnimatedSplashOverlay />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="game-detail" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="conversion-result" />
               <Stack.Screen name="help" />
               <Stack.Screen name="settings/language" />
             </Stack>
