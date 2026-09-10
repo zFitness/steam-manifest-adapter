@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.steammanifestadapter"
+      "package": "com.zfitness.manifestadapter"
     },
     "plugins": [
       "expo-router",
