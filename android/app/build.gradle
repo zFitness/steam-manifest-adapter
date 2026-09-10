@@ -11,7 +11,10 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 react {
     entryFile = file(["node", "-e", "require('expo/scripts/resolveAppEntry')", projectRoot, "android", "absolute"].execute(null, rootDir).text.trim())
     reactNativeDir = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
-    hermesCommand = new File(["node", "--print", "require.resolve('hermes-compiler/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/hermesc/%OS-BIN%/hermesc"
+    // On ARM64 Linux hosts the npm hermes-compiler ships no linux-aarch64 binary;
+    // a locally built hermesc can be injected via the gradle property hermesCommandOverride
+    // (put it in ~/.gradle/gradle.properties, never in the repo).
+    hermesCommand = (findProperty('hermesCommandOverride') ?: new File(["node", "--print", "require.resolve('hermes-compiler/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/hermesc/%OS-BIN%/hermesc").toString()
     codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
 
     enableBundleCompression = (findProperty('android.enableBundleCompression') ?: false).toBoolean()
@@ -81,12 +84,14 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
-// Release signing is injected via environment variables (see my-docs/发布与构建.md).
-// CI decodes the keystore from the ANDROID_KEYSTORE_BASE64 secret and exports all four variables.
-def releaseStoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
-def releaseStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-def releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
-def releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+// Release signing resolution order (see my-docs/发布与构建.md):
+//   1. Gradle properties MYAPP_UPLOAD_* (local: put them in ~/.gradle/gradle.properties,
+//      per https://expo.dev/guides/local-app-production - never commit them)
+//   2. Environment variables ANDROID_* (CI: injected from GitHub Secrets)
+def releaseStoreFile = (findProperty('MYAPP_UPLOAD_STORE_FILE') ?: System.getenv("ANDROID_KEYSTORE_FILE"))?.toString()
+def releaseStorePassword = (findProperty('MYAPP_UPLOAD_STORE_PASSWORD') ?: System.getenv("ANDROID_KEYSTORE_PASSWORD"))?.toString()
+def releaseKeyAlias = (findProperty('MYAPP_UPLOAD_KEY_ALIAS') ?: System.getenv("ANDROID_KEY_ALIAS"))?.toString()
+def releaseKeyPassword = (findProperty('MYAPP_UPLOAD_KEY_PASSWORD') ?: System.getenv("ANDROID_KEY_PASSWORD"))?.toString()
 def hasReleaseSigning = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it != null && !it.isEmpty() }
 
 android {
@@ -118,6 +123,14 @@ android {
                 storePassword releaseStorePassword
                 keyAlias releaseKeyAlias
                 keyPassword releaseKeyPassword
+            }
+        }
+        release {
+            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+                storeFile file(MYAPP_UPLOAD_STORE_FILE)
+                storePassword MYAPP_UPLOAD_STORE_PASSWORD
+                keyAlias MYAPP_UPLOAD_KEY_ALIAS
+                keyPassword MYAPP_UPLOAD_KEY_PASSWORD
             }
         }
     }
