@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.16",
+    "@react-native-vector-icons/common": "^13.0.3",
+    "@react-native-vector-icons/lucide": "^13.1.4",
     "expo": "~57.0.20",
     "expo-constants": "~57.0.17",
     "expo-device": "~57.0.1",
