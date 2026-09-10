@@ -1,5 +1,5 @@
 import { useCallback, useReducer, useRef, useState } from 'react';
-import { Button, Dialog } from 'heroui-native';
+import { Button, Dialog, Spinner } from 'heroui-native';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
@@ -52,14 +52,20 @@ export default function ConvertScreen() {
   // A ref, because the guard must hold before any re-render happens.
   const convertInFlight = useRef(false);
   const mutedTertiary = String(useCSSVariable('--muted-tertiary') ?? '#747584');
+  const accentForeground = String(useCSSVariable('--accent-foreground') ?? '#FFFFFF');
 
   const isBusy = state.status === 'converting';
-  // The finished state has its own summary and "view results" entry point, so it
-  // does not get the primary button back.
+  // The finished state keeps failed and skipped rows ticked so a retry is one
+  // tap, so it gets the primary button back: hiding it would strand those rows
+  // with no way to run again short of re-picking the directory.
   const showPrimaryAction =
-    state.status === 'scanned-has-adaptable' || isBusy;
+    state.status === 'scanned-has-adaptable' ||
+    isBusy ||
+    state.status === 'converted';
   const canConvert =
-    state.status === 'scanned-has-adaptable' && state.selected.length > 0;
+    (state.status === 'scanned-has-adaptable' ||
+      state.status === 'converted') &&
+    state.selected.length > 0;
 
   /**
    * Runs a scan and reports it under a fresh id.
@@ -279,7 +285,11 @@ export default function ConvertScreen() {
 
           {showPrimaryAction ? (
             <Button
-              variant={isBusy ? 'ghost' : 'primary'}
+              // Busy stays primary-and-disabled: a ghost row of bare numbers
+              // read as "the convert button disappeared" mid-batch. heroui-native
+              // Button takes free-form children, so the spinner can sit inline
+              // next to the counter; its color is matched to the label's.
+              variant="primary"
               onPress={() => {
                 if (canConvert) {
                   setDialogOpen(true);
@@ -288,12 +298,19 @@ export default function ConvertScreen() {
               isDisabled={!canConvert}
               className="h-[52px] w-full rounded-pill"
             >
-              {isBusy
-                ? t('convert.progress.counter', {
-                  done: state.processed,
-                  total: state.batchTotal,
-                })
-                : t('convert.action.start', { count: state.selected.length })}
+              {isBusy ? (
+                <View className="flex-row items-center gap-2">
+                  <Spinner size="sm" color={accentForeground} />
+                  <Text>
+                    {t('convert.progress.busy', {
+                      done: state.processed,
+                      total: state.batchTotal,
+                    })}
+                  </Text>
+                </View>
+              ) : (
+                t('convert.action.start', { count: state.selected.length })
+              )}
             </Button>
           ) : null}
 

@@ -104,10 +104,6 @@ export const initialConvertState: ConvertState = {
   scanId: 0,
 };
 
-function defaultSelection(games: ScannedGame[]): string[] {
-  return games.filter(isDefaultSelected).map((game) => game.id);
-}
-
 /**
  * Counts the four outcomes actually reported by the batch.
  *
@@ -189,7 +185,7 @@ function devState(status: ConvertStatus): ConvertState {
     status,
     directory: DEV_SAMPLE_DIRECTORY,
     games: DEV_SAMPLE_GAMES,
-    selected: defaultSelection(DEV_SAMPLE_GAMES),
+    selected: DEV_SAMPLE_GAMES.filter(isDefaultSelected).map((game) => game.id),
   };
 
   switch (status) {
@@ -272,7 +268,9 @@ export function convertReducer(state: ConvertState, event: ConvertEvent): Conver
         ...state,
         status: 'scanned-has-adaptable',
         games: event.games,
-        selected: defaultSelection(event.games),
+        // Nothing is pre-selected: adapting writes to game folders, so which
+        // games get touched must be a deliberate pick, not a default.
+        selected: [],
         processed: 0,
         summary: null,
       };
@@ -296,6 +294,11 @@ export function convertReducer(state: ConvertState, event: ConvertEvent): Conver
       return { ...state, status: 'permission-revoked', games: [], selected: [] };
 
     case 'toggle-game': {
+      // Mid-batch the list is under a loading overlay and must not change:
+      // a row ticked while the writer runs would miss the batch entirely.
+      if (state.status === 'converting') {
+        return state;
+      }
       const game = state.games.find((g) => g.id === event.id);
       // Games that cannot be adapted are never selectable.
       if (!game || !isSelectable(game)) {
@@ -308,6 +311,9 @@ export function convertReducer(state: ConvertState, event: ConvertEvent): Conver
     }
 
     case 'toggle-all': {
+      if (state.status === 'converting') {
+        return state;
+      }
       // "Select all" is the bulk entry point for the *default* selection, so it
       // only ever covers `adaptable` rows. Ticking an `alreadyAdapted` or
       // `needsAttention` row stays a deliberate, per-row decision — sweeping

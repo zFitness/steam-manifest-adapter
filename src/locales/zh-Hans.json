@@ -59,6 +59,7 @@
   "convert.action.disabledReason": "请至少选择一个游戏",
   "convert.progress.title": "正在适配…",
   "convert.progress.counter": "{{done}} / {{total}}",
+  "convert.progress.busy": "正在适配 {{done}} / {{total}}",
   "convert.done.title": "适配完成",
   "convert.done.summaryItem": "{{label}} {{count}}",
   "status.adaptable": "可适配",

@@ -285,20 +285,63 @@ export function LibraryCard({
       ) : null}
 
       {showList && state.directory ? (
-        <View className="gap-3" style={{ paddingVertical: CardPadding.library }}>
-          <ListHeader
-            directory={state.directory}
-            total={state.games.length}
-            adaptableCount={adaptableCount}
-            selectedCount={state.selected.length}
-            allSelected={allSelected}
-            onPickDirectory={onPickDirectory}
-            onToggleAll={onToggleAll}
-            canReselect={state.status !== 'converting'}
-          />
+        // Relative wrapper so the converting overlay can absolutely fill the
+        // card content and swallow every touch on it.
+        <View className="relative">
+          <View
+            className="gap-3"
+            style={{
+              paddingVertical: CardPadding.library,
+              // A real batch is writing underneath: keep the list visible but
+              // clearly subdued (board 01b's loading cue, extended to the whole
+              // card) instead of swapping in a plain message state.
+              opacity: state.status === 'converting' ? 0.4 : 1,
+            }}
+          >
+            <ListHeader
+              directory={state.directory}
+              total={state.games.length}
+              adaptableCount={adaptableCount}
+              selectedCount={state.selected.length}
+              allSelected={allSelected}
+              onPickDirectory={onPickDirectory}
+              onToggleAll={onToggleAll}
+              canReselect={state.status !== 'converting'}
+            />
+
+            {state.status === 'converted' && state.summary ? (
+              <ConvertedSummary summary={state.summary} />
+            ) : null}
+
+            {/* Only the list scrolls, so the primary button below the card stays
+                reachable without scrolling the whole page.
+
+                `nestedScrollEnabled` is required, not optional: this ScrollView
+                sits inside the screen's own ScrollView, and on Android nested
+                scrolling is off by default, so without it the outer view consumes
+                every drag and the list cannot be scrolled at all. */}
+            <ScrollView
+              style={{ maxHeight: LibraryListMaxHeight }}
+              contentContainerStyle={{ gap: ListRowGap }}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+            >
+              {state.games.map((game) => (
+                <GameRow
+                  key={game.id}
+                  game={game}
+                  isSelected={state.selected.includes(game.id)}
+                  onToggle={onToggleGame}
+                />
+              ))}
+            </ScrollView>
+          </View>
 
           {state.status === 'converting' ? (
-            <View className="gap-1.5 rounded-xl bg-surface-secondary p-3">
+            // Swallows every touch on the subdued content below, so checkboxes,
+            // select-all and list gestures are all dead while a batch writes.
+            <View className="absolute inset-0 items-center justify-center gap-2">
+              <Spinner size="lg" />
               <Text className="text-[13px] font-semibold text-foreground">
                 {t('convert.progress.title')}
               </Text>
@@ -311,33 +354,6 @@ export function LibraryCard({
               </Text>
             </View>
           ) : null}
-
-          {state.status === 'converted' && state.summary ? (
-            <ConvertedSummary summary={state.summary} />
-          ) : null}
-
-          {/* Only the list scrolls, so the primary button below the card stays
-              reachable without scrolling the whole page.
-
-              `nestedScrollEnabled` is required, not optional: this ScrollView
-              sits inside the screen's own ScrollView, and on Android nested
-              scrolling is off by default, so without it the outer view consumes
-              every drag and the list cannot be scrolled at all. */}
-          <ScrollView
-            style={{ maxHeight: LibraryListMaxHeight }}
-            contentContainerStyle={{ gap: ListRowGap }}
-            showsVerticalScrollIndicator={false}
-            nestedScrollEnabled
-          >
-            {state.games.map((game) => (
-              <GameRow
-                key={game.id}
-                game={game}
-                isSelected={state.selected.includes(game.id)}
-                onToggle={onToggleGame}
-              />
-            ))}
-          </ScrollView>
         </View>
       ) : null}
     </Card>

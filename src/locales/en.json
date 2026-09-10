@@ -74,6 +74,7 @@
   "convert.action.disabledReason": "Select at least one game to continue",
   "convert.progress.title": "Adapting…",
   "convert.progress.counter": "{{done}} / {{total}}",
+  "convert.progress.busy": "Adapting {{done}} / {{total}}",
   "convert.done.title": "Adaptation complete",
   "convert.done.summaryItem": "{{label}} {{count}}",
   "status.adaptable": "Adaptable",

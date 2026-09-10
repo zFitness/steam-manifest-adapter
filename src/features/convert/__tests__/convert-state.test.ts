@@ -72,7 +72,7 @@ function scanning(scanId = 1): ConvertState {
   });
 }
 
-/** A completed scan, reached the only way the UI can reach it. */
+/** A completed scan, reached the only way the UI can reach it. Nothing is selected yet. */
 function scanned(): ConvertState {
   const state = scanning();
   return convertReducer(state, {
@@ -80,6 +80,11 @@ function scanned(): ConvertState {
     scanId: state.scanId,
     games: GAMES,
   });
+}
+
+/** A completed scan with every adaptable row ticked, via the bulk entry point. */
+function scannedWithSelection(): ConvertState {
+  return convertReducer(scanned(), { type: 'toggle-all' });
 }
 
 describe('convertReducer', () => {
@@ -248,35 +253,16 @@ describe('convertReducer', () => {
   });
 
   describe('default selection', () => {
-    it('ticks only adaptable games', () => {
-      const state = scanned();
-      const adaptable = GAMES.filter((g) => g.status === 'adaptable');
-      expect(state.selected).toHaveLength(adaptable.length);
-      expect(state.selected.sort()).toEqual(adaptable.map((g) => g.id).sort());
-    });
-
-    it('does not tick alreadyAdapted, needsAttention or notAdaptable', () => {
-      const state = scanned();
-      for (const game of GAMES) {
-        if (game.status !== 'adaptable') {
-          expect(state.selected).not.toContain(game.id);
-        }
-      }
+    // Adapting writes to game folders, so nothing is pre-selected: which games
+    // get touched must be a deliberate pick, not a default.
+    it('ticks nothing after a scan', () => {
+      expect(scanned().selected).toEqual([]);
     });
   });
 
   describe('toggle-all', () => {
-    /**
-     * A finished scan already has every adaptable row ticked, so the *first*
-     * "select all" tap is a deselect. These start from an empty selection when
-     * they need to exercise the selecting direction.
-     */
-    function nothingSelected(): ConvertState {
-      return { ...scanned(), selected: [] };
-    }
-
     it('never selects notAdaptable games', () => {
-      const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+      const state = convertReducer(scanned(), { type: 'toggle-all' });
       const blocked = GAMES.filter((g) => g.status === 'notAdaptable');
       expect(blocked.length).toBeGreaterThan(0);
       for (const game of blocked) {
@@ -284,11 +270,11 @@ describe('convertReducer', () => {
       }
     });
 
-    // "Select all" is the bulk form of the default selection, not "tick
-    // everything tickable": sweeping in alreadyAdapted / needsAttention rows
-    // would re-mark games the user never singled out.
+    // "Select all" is not "tick everything tickable": sweeping in
+    // alreadyAdapted / needsAttention rows would re-mark games the user never
+    // singled out.
     it('selects only adaptable games', () => {
-      const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+      const state = convertReducer(scanned(), { type: 'toggle-all' });
       const adaptable = GAMES.filter((g) => g.status === 'adaptable');
 
       expect(state.selected.sort()).toEqual(adaptable.map((g) => g.id).sort());
@@ -297,16 +283,15 @@ describe('convertReducer', () => {
     it.each(['alreadyAdapted', 'needsAttention'] as const)(
       'does not select %s games',
       (status) => {
-        const state = convertReducer(nothingSelected(), { type: 'toggle-all' });
+        const state = convertReducer(scanned(), { type: 'toggle-all' });
         const game = GAMES.find((g) => g.status === status)!;
 
         expect(state.selected).not.toContain(game.id);
       },
     );
 
-    // The default selection is already the full adaptable set, so one tap clears.
     it('clears the selection when every adaptable game is already selected', () => {
-      const cleared = convertReducer(scanned(), { type: 'toggle-all' });
+      const cleared = convertReducer(scannedWithSelection(), { type: 'toggle-all' });
 
       expect(cleared.selected).toEqual([]);
     });
@@ -314,7 +299,7 @@ describe('convertReducer', () => {
     // Deselecting all must not undo a deliberate per-row choice.
     it('keeps a hand-picked row when clearing the adaptable ones', () => {
       const manual = GAMES.find((g) => g.status === 'needsAttention')!;
-      const withManual = convertReducer(scanned(), {
+      const withManual = convertReducer(scannedWithSelection(), {
         type: 'toggle-game',
         id: manual.id,
       });
@@ -348,11 +333,14 @@ describe('convertReducer', () => {
 
     it('unticks an already ticked game', () => {
       const target = GAMES.find((g) => g.status === 'adaptable')!;
-      const state = convertReducer(scanned(), { type: 'toggle-game', id: target.id });
+      const state = convertReducer(scannedWithSelection(), {
+        type: 'toggle-game',
+        id: target.id,
+      });
       expect(state.selected).not.toContain(target.id);
     });
 
-    it('ticks a selectable game that was not ticked by default', () => {
+    it('ticks a selectable game', () => {
       const target = GAMES.find((g) => g.status === 'needsAttention')!;
       const state = convertReducer(scanned(), { type: 'toggle-game', id: target.id });
       expect(state.selected).toContain(target.id);
@@ -394,7 +382,7 @@ describe('convertReducer', () => {
     });
 
     it('starts when at least one game is selected', () => {
-      const state = convertReducer(scanned(), { type: 'start-conversion' });
+      const state = convertReducer(scannedWithSelection(), { type: 'start-conversion' });
       expect(state.status).toBe('converting');
       expect(state.processed).toBe(0);
     });
@@ -406,8 +394,7 @@ describe('convertReducer', () => {
         (acc, game) => convertReducer(acc, { type: 'toggle-game', id: game.id }),
         scanned(),
       );
-      const start = convertReducer(withOthers, { type: 'toggle-all' });
-      const converting = convertReducer(start, { type: 'start-conversion' });
+      const converting = convertReducer(withOthers, { type: 'start-conversion' });
 
       // One outcome per ticked row, which is what the executor reports back.
       const results: ConversionItemResult[] = converting.selected.map((id, index) => {
@@ -443,7 +430,9 @@ describe('convertReducer', () => {
     });
 
     it('marks written rows as adapted and unticks them, leaving failures retryable', () => {
-      const converting = convertReducer(scanned(), { type: 'start-conversion' });
+      const converting = convertReducer(scannedWithSelection(), {
+        type: 'start-conversion',
+      });
       const [firstId, secondId] = converting.selected;
       const first = GAMES.find((g) => g.id === firstId)!;
       const second = GAMES.find((g) => g.id === secondId)!;
@@ -475,7 +464,9 @@ describe('convertReducer', () => {
     });
 
     it('keeps partial results visible when the grant lapses mid-batch', () => {
-      const converting = convertReducer(scanned(), { type: 'start-conversion' });
+      const converting = convertReducer(scannedWithSelection(), {
+        type: 'start-conversion',
+      });
       const [firstId] = converting.selected;
       const first = GAMES.find((g) => g.id === firstId)!;
 
