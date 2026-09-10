@@ -1,14 +1,28 @@
+import Constants from 'expo-constants';
 import { Link } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ExternalLink } from '@/components/external-link';
 import { PagePadding, SectionGap } from '@/constants/theme';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTranslate } from '@/i18n/provider';
 
+const REPOSITORY_URL = 'https://github.com/zFitness/steam-manifest-adapter';
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="flex-row items-center justify-between gap-4">
+      <Text className="text-sm text-muted">{label}</Text>
+      <Text className="text-sm text-foreground">{value}</Text>
+    </View>
+  );
+}
+
 export default function AboutScreen() {
   const t = useTranslate();
   const bottomInset = useTabBarInset();
+  const version = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
@@ -22,15 +36,22 @@ export default function AboutScreen() {
         <Text className="text-2xl font-bold text-foreground">{t('about.title')}</Text>
 
         <View className="gap-2 rounded-card bg-surface p-4">
+          <Text className="text-base font-semibold text-foreground">
+            {t('about.appInfo')}
+          </Text>
+          <InfoRow label={t('about.info.name')} value={t('app.name')} />
+          <InfoRow label={t('about.info.version')} value={t('about.version', { version })} />
+          <InfoRow label={t('about.info.license')} value="MIT" />
+          <InfoRow label={t('about.info.developer')} value="zFitness" />
+          <ExternalLink href={REPOSITORY_URL} className="text-sm text-link">
+            github.com/zFitness/steam-manifest-adapter
+          </ExternalLink>
+        </View>
+
+        <View className="gap-2 rounded-card bg-surface p-4">
           <Text className="text-base font-semibold text-foreground">{t('about.help')}</Text>
-          <Link href="/guide/winnative" className="text-sm text-link">
-            {t('about.help.winnative')}
-          </Link>
-          <Link href="/guide/gaishi" className="text-sm text-link">
-            {t('about.help.gaishi')}
-          </Link>
-          <Link href="/guide/troubleshooting" className="text-sm text-link">
-            {t('about.help.troubleshooting')}
+          <Link href="/help" className="text-sm text-link">
+            {t('help.title')}
           </Link>
         </View>
 
@@ -41,15 +62,6 @@ export default function AboutScreen() {
           <Link href="/settings/language" className="text-sm text-link">
             {t('about.settings.language')}
           </Link>
-        </View>
-
-        <View className="gap-2 rounded-card bg-surface-tertiary p-4">
-          <Text className="text-sm font-semibold text-foreground">
-            {t('about.disclaimer.title')}
-          </Text>
-          <Text className="text-xs leading-[20px] text-muted">
-            {t('about.disclaimer.body')}
-          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -96,10 +96,11 @@ describe('i18n lookup', () => {
 
   it('falls back to English when a key is absent from the active locale', () => {
     // `enableFallback` + defaultLocale 'en' must survive the separator change.
-    const zhOnlyMissing = 'about.disclaimer.body';
-    expect(i18n.t(zhOnlyMissing, { locale: 'zh-Hans' })).toBe(
-      (zhHans as Record<string, string>)[zhOnlyMissing],
-    );
+    // Inject a key that exists only in English so the test does not depend on
+    // catalogue drift between the two locales.
+    const enOnlyKey = 'test.enOnly.fallbackCanary';
+    i18n.store({ en: { [enOnlyKey]: 'fallback canary' } });
+    expect(i18n.t(enOnlyKey, { locale: 'zh-Hans' })).toBe('fallback canary');
   });
 
   it('does not render invisible characters for a doubly-missing key', () => {

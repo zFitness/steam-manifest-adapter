@@ -50,7 +50,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="game-detail" options={{ presentation: 'modal' }} />
               <Stack.Screen name="conversion-result" />
-              <Stack.Screen name="guide/[slug]" />
+              <Stack.Screen name="help" />
               <Stack.Screen name="settings/language" />
             </Stack>
           </ThemeProvider>

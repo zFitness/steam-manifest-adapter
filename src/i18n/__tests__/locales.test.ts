@@ -119,7 +119,7 @@ describe('locale catalogues', () => {
       'result',
       'about',
       'settings',
-      'guide',
+      'help',
     ];
     // Plural categories live one level below a key, so only the top-level
     // catalogue keys take part in namespace validation.
