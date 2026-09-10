@@ -63,6 +63,10 @@ npx tsc --noEmit
 npm test
 ```
 
+## 发布
+
+推送 `v*` 形式的 git tag 即可触发 GitHub Actions 构建签名 APK 并创建 GitHub Release。首次发布前需要配置签名 Secrets，详见 [发布与构建](./my-docs/发布与构建.md)。
+
 ## 声明
 
 本项目是非官方开源工具，与 Steam、WinNative、盖世模拟器或未来支持的其他模拟器没有任何官方关联。使用本工具产生的一切后果由使用者自行承担，请确保你对所操作的游戏目录拥有合法权利。

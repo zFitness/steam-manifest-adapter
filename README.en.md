@@ -63,6 +63,10 @@ npx tsc --noEmit
 npm test
 ```
 
+## Release
+
+Pushing a git tag like `v1.0.0` triggers a GitHub Actions workflow that builds a signed APK and creates a GitHub Release. Signing secrets must be configured before the first release — see [发布与构建](./my-docs/发布与构建.md) (Chinese).
+
 ## Disclaimer
 
 This is an unofficial open-source tool with no official affiliation with Steam, WinNative, the GameHub emulator, or any emulator supported in the future. You use it at your own risk; make sure you have legitimate rights over the game directories you operate on.

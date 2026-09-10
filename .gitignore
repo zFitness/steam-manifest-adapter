@@ -17,6 +17,9 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+*.keystore
+keystore.properties
+!debug.keystore
 
 # Metro
 .metro-health-check*
@@ -42,5 +45,12 @@ src/uniwind-types.d.ts
 example
 
 # generated native folders
+# /android is committed: the release workflow builds it directly with Gradle
+# (see my-docs/发布与构建.md). /ios stays ignored until an iOS target exists.
 /ios
-/android
+# /android
+android/build/
+android/.gradle/
+android/app/build/
+android/app/release/
+android/local.properties
