@@ -26,8 +26,11 @@ import { FsError, type FsEntry, type ReadOnlyFs } from './fs-adapter';
  * `Paths.basename` stops at the last `/` in the *raw* URI, but a SAF document id
  * encodes its path separators as `%2F`, so the basename is the whole id. Decode
  * first, then take the final segment.
+ *
+ * Exported because the write side needs exactly this to read back the name a
+ * created file landed under (`features/conversion/expo-fs-writer.ts`).
  */
-function decodeAndTakeLastSegment(rawName: string): string {
+export function decodeAndTakeLastSegment(rawName: string): string {
   let decoded: string;
   try {
     decoded = decodeURIComponent(rawName);

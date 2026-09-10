@@ -1,3 +1,4 @@
+import type { ConversionItemResult } from '@/features/conversion/types';
 import type { ScannedGame } from '@/features/library-scan/types';
 
 import {
@@ -398,8 +399,8 @@ describe('convertReducer', () => {
       expect(state.processed).toBe(0);
     });
 
-    it('summarises per-status counts rather than an overall failure', () => {
-      // Hand-pick the non-adaptable rows too, so the summary has something to
+    it('summarises the reported outcomes rather than an overall failure', () => {
+      // Hand-pick the non-adaptable rows too, so the batch has something to
       // report in every bucket — "select all" alone only covers adaptable ones.
       const withOthers = GAMES.filter((g) => g.status !== 'notAdaptable').reduce(
         (acc, game) => convertReducer(acc, { type: 'toggle-game', id: game.id }),
@@ -407,7 +408,24 @@ describe('convertReducer', () => {
       );
       const start = convertReducer(withOthers, { type: 'toggle-all' });
       const converting = convertReducer(start, { type: 'start-conversion' });
-      const done = convertReducer(converting, { type: 'conversion-finished' });
+
+      // One outcome per ticked row, which is what the executor reports back.
+      const results: ConversionItemResult[] = converting.selected.map((id, index) => {
+        const game = GAMES.find((g) => g.id === id)!;
+        const identity = { gameId: game.id, appId: game.appId, name: game.name };
+        if (index === 0) {
+          return { ...identity, outcome: 'success' };
+        }
+        if (game.status === 'alreadyAdapted') {
+          return { ...identity, outcome: 'alreadyAdapted', reason: 'already-marked' };
+        }
+        if (game.status === 'needsAttention') {
+          return { ...identity, outcome: 'failed', reason: 'read-only', rolledBack: 'restored' };
+        }
+        return { ...identity, outcome: 'success' };
+      });
+
+      const done = convertReducer(converting, { type: 'conversion-finished', results });
 
       expect(done.status).toBe('converted');
       expect(done.summary).not.toBeNull();
@@ -416,9 +434,63 @@ describe('convertReducer', () => {
         done.summary!.alreadyAdapted +
         done.summary!.skipped +
         done.summary!.failed;
-      expect(total).toBe(done.selected.length);
+      // Every processed game lands in exactly one bucket.
+      expect(total).toBe(results.length);
+      expect(done.processed).toBe(results.length);
       // A partial failure must not read as a total failure.
       expect(done.summary!.success).toBeGreaterThan(0);
+      expect(done.summary!.failed).toBeGreaterThan(0);
+    });
+
+    it('marks written rows as adapted and unticks them, leaving failures retryable', () => {
+      const converting = convertReducer(scanned(), { type: 'start-conversion' });
+      const [firstId, secondId] = converting.selected;
+      const first = GAMES.find((g) => g.id === firstId)!;
+      const second = GAMES.find((g) => g.id === secondId)!;
+
+      const done = convertReducer(converting, {
+        type: 'conversion-finished',
+        results: [
+          { gameId: first.id, appId: first.appId, name: first.name, outcome: 'success' },
+          {
+            gameId: second.id,
+            appId: second.appId,
+            name: second.name,
+            outcome: 'failed',
+            reason: 'create-marker-failed',
+            rolledBack: 'restored',
+          },
+        ],
+      });
+
+      // The app just made this true, so it shows without a rescan.
+      const writtenRow = done.games.find((g) => g.id === firstId)!;
+      expect(writtenRow.status).toBe('alreadyAdapted');
+      expect(done.selected).not.toContain(firstId);
+
+      // Still ticked, so retrying is one tap.
+      const failedRow = done.games.find((g) => g.id === secondId)!;
+      expect(failedRow.status).toBe(second.status);
+      expect(done.selected).toContain(secondId);
+    });
+
+    it('keeps partial results visible when the grant lapses mid-batch', () => {
+      const converting = convertReducer(scanned(), { type: 'start-conversion' });
+      const [firstId] = converting.selected;
+      const first = GAMES.find((g) => g.id === firstId)!;
+
+      const done = convertReducer(converting, {
+        type: 'conversion-finished',
+        results: [{ gameId: first.id, appId: first.appId, name: first.name, outcome: 'success' }],
+        abortedBy: 'permission-revoked',
+      });
+
+      expect(done.status).toBe('permission-revoked');
+      // Narrower than a revoked *scan*: what already landed on disk is the only
+      // record the user has of it, so it is not cleared.
+      expect(done.summary!.success).toBe(1);
+      expect(done.results).toHaveLength(1);
+      expect(done.games).not.toEqual([]);
     });
   });
 });

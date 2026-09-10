@@ -18,14 +18,26 @@
  * `fileExists`, and every entry carries the `uri` needed to descend further.
  */
 
-/** How a filesystem operation failed. Callers map these onto card states. */
+/**
+ * How a filesystem operation failed. Callers map these onto card states.
+ *
+ * The first three are reachable while reading; the rest only while writing (see
+ * `features/conversion/fs-writer.ts`). They share one enum because both sides
+ * throw the same `FsError`, so a caller never has to know which layer raised it.
+ */
 export type FsErrorKind =
   /** The target is not there. Expected during a scan, not a failure. */
   | 'not-found'
   /** The grant for this tree is no longer valid. */
   | 'permission-revoked'
   /** Anything else: unreadable media, ejected SD card, platform error. */
-  | 'io-error';
+  | 'io-error'
+  /** The target exists but cannot be written to. Write-only. */
+  | 'read-only'
+  /** Not enough free space to create the file. Write-only. */
+  | 'no-space'
+  /** A file with that name is already there. Write-only. */
+  | 'already-exists';
 
 /**
  * The error every `ReadOnlyFs` implementation throws, so callers never have to

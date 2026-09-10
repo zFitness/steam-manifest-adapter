@@ -31,6 +31,19 @@ export type MemoryFsOptions = {
 export type MemoryFs = ReadOnlyFs & {
   /** How many times each directory was listed, for asserting caching. */
   listCounts: Map<string, number>;
+  /**
+   * Resolves a handed-out URI back to its `/`-joined tree path, or `undefined`
+   * for a URI this instance never minted.
+   *
+   * Exists so the writable replica (`features/conversion/memory-fs-writer.ts`)
+   * can mutate the same tree a listing came from: the executor verifies a write
+   * by listing the directory again, which proves nothing unless both halves
+   * share one tree. Keeping the mapping here rather than reconstructing it there
+   * preserves the rule that only minted URIs resolve at all.
+   */
+  pathOf: (uri: string) => string | undefined;
+  /** The URI the tree is mounted at. */
+  rootUri: string;
 };
 
 const DEFAULT_ROOT = 'content://com.android.externalstorage.documents/tree/primary%3Agames';
@@ -140,6 +153,8 @@ export function createMemoryFs(
     listDirectory,
     readTextFile,
     listCounts,
+    pathOf: (uri: string) => uriToPath.get(uri),
+    rootUri,
   };
 }
 

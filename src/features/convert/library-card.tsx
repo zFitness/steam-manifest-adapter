@@ -51,6 +51,7 @@ function ListHeader({
   allSelected,
   onPickDirectory,
   onToggleAll,
+  canReselect,
 }: {
   directory: string;
   total: number;
@@ -59,6 +60,8 @@ function ListHeader({
   allSelected: boolean;
   onPickDirectory: () => void;
   onToggleAll: () => void;
+  /** Hides the re-pick entry point: changing folders mid-write is not allowed. */
+  canReselect: boolean;
 }) {
   const t = useTranslate();
   const accent = String(useCSSVariable('--accent') ?? '#5B5FEF');
@@ -86,14 +89,16 @@ function ListHeader({
           </Text>
         </View>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onPress={onPickDirectory}
-          className="h-8 rounded-2xl px-3"
-        >
-          {t('convert.library.header.reselect')}
-        </Button>
+        {canReselect ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={onPickDirectory}
+            className="h-8 rounded-2xl px-3"
+          >
+            {t('convert.library.header.reselect')}
+          </Button>
+        ) : null}
       </View>
 
       <View className="flex-row items-center justify-between gap-2">
@@ -257,18 +262,36 @@ export function LibraryCard({
         />
       ) : null}
 
+      {/* Two ways the grant can lapse, told apart by whether a batch had already
+          written anything. A revoked *scan* has nothing to show and clears the
+          list; a revoked *batch* leaves real changes on disk, and its summary is
+          the user's only record of them, so it is kept on screen. */}
       {state.status === 'permission-revoked' ? (
-        <LibraryCardMessage
-          title={t('convert.library.permissionLost.title')}
-          description={t('convert.library.permissionLost.description')}
-          action={
-            <CardAction
-              variant="primary"
-              label={t('convert.library.permissionLost.action')}
-              onPress={onPickDirectory}
-            />
-          }
-        />
+        <View className="gap-3" style={{ paddingVertical: CardPadding.library }}>
+          <LibraryCardMessage
+            title={t(
+              state.results.length > 0
+                ? 'convert.library.permissionLostDuringConvert.title'
+                : 'convert.library.permissionLost.title',
+            )}
+            description={t(
+              state.results.length > 0
+                ? 'convert.library.permissionLostDuringConvert.description'
+                : 'convert.library.permissionLost.description',
+            )}
+            action={
+              <CardAction
+                variant="primary"
+                label={t('convert.library.permissionLost.action')}
+                onPress={onPickDirectory}
+              />
+            }
+          />
+
+          {state.summary ? (
+            <ConvertedSummary summary={state.summary} onViewResults={onViewResults} />
+          ) : null}
+        </View>
       ) : null}
 
       {showList && state.directory ? (
@@ -281,6 +304,7 @@ export function LibraryCard({
             allSelected={allSelected}
             onPickDirectory={onPickDirectory}
             onToggleAll={onToggleAll}
+            canReselect={state.status !== 'converting'}
           />
 
           {state.status === 'converting' ? (
@@ -289,9 +313,10 @@ export function LibraryCard({
                 {t('convert.progress.title')}
               </Text>
               <Text className="text-xs text-muted">
+                {/* Real completions out of the batch size — not an animation. */}
                 {t('convert.progress.counter', {
                   done: state.processed,
-                  total: state.selected.length,
+                  total: state.batchTotal,
                 })}
               </Text>
             </View>

@@ -1,3 +1,7 @@
+import type {
+  ConversionAbort,
+  ConversionItemResult,
+} from '@/features/conversion/types';
 import {
   isDefaultSelected,
   isSelectable,
@@ -28,7 +32,24 @@ export type ConvertState = {
   discovered: number;
   /** Games processed so far, while `status === 'converting'`. */
   processed: number;
+  /**
+   * How many games the running batch was given.
+   *
+   * Recorded when the batch starts rather than read from `selected`: the reducer
+   * unticks successful rows when it finishes, so a progress figure derived from
+   * the selection would have a denominator that changes underneath it.
+   */
+  batchTotal: number;
   summary: { success: number; alreadyAdapted: number; skipped: number; failed: number } | null;
+  /**
+   * Per-game outcomes from the last batch, in the order they were processed.
+   *
+   * Kept alongside `summary` rather than derived from `games`: the row statuses
+   * come from the scan and cannot express *why* a write failed or whether the
+   * folder was left untouched. This is the only record of that, and what the
+   * results screen reads.
+   */
+  results: ConversionItemResult[];
   /**
    * Identifies the scan whose results this state will accept.
    *
@@ -60,7 +81,12 @@ export type ConvertEvent =
   | { type: 'toggle-all' }
   | { type: 'start-conversion' }
   | { type: 'conversion-progressed'; processed: number }
-  | { type: 'conversion-finished' }
+  /**
+   * Reports what the batch actually did. Carries the outcomes rather than
+   * letting the reducer guess: before this, the summary was inferred from each
+   * row's *scan* status, which describes what was attempted, not what happened.
+   */
+  | { type: 'conversion-finished'; results: ConversionItemResult[]; abortedBy?: ConversionAbort }
   | { type: 'reset' }
   // Dev-only shortcut for the state switcher.
   | { type: 'dev-goto'; status: ConvertStatus };
@@ -72,7 +98,9 @@ export const initialConvertState: ConvertState = {
   selected: [],
   discovered: 0,
   processed: 0,
+  batchTotal: 0,
   summary: null,
+  results: [],
   scanId: 0,
 };
 
@@ -80,13 +108,19 @@ function defaultSelection(games: ScannedGame[]): string[] {
   return games.filter(isDefaultSelected).map((game) => game.id);
 }
 
-function summarise(games: ScannedGame[], selected: string[]) {
-  const chosen = games.filter((game) => selected.includes(game.id));
+/**
+ * Counts the four outcomes actually reported by the batch.
+ *
+ * Counting `results` and not the selection: a batch can stop early, in which case
+ * fewer games have outcomes than were ticked, and the totals must reflect what
+ * was really done.
+ */
+function summarise(results: ConversionItemResult[]) {
   return {
-    success: chosen.filter((g) => g.status === 'adaptable').length,
-    alreadyAdapted: chosen.filter((g) => g.status === 'alreadyAdapted').length,
-    skipped: chosen.filter((g) => g.status === 'needsAttention').length,
-    failed: chosen.filter((g) => g.status === 'notAdaptable').length,
+    success: results.filter((r) => r.outcome === 'success').length,
+    alreadyAdapted: results.filter((r) => r.outcome === 'alreadyAdapted').length,
+    skipped: results.filter((r) => r.outcome === 'skipped').length,
+    failed: results.filter((r) => r.outcome === 'failed').length,
   };
 }
 
@@ -134,6 +168,20 @@ const DEV_SAMPLE_GAMES: ScannedGame[] = [
   },
 ];
 
+/**
+ * Outcomes matching what a batch over `DEV_SAMPLE_GAMES`'s default selection
+ * would report. Only `adaptable` rows are selected by default, so this is one
+ * success — enough for the switcher to show a populated summary.
+ */
+const DEV_SAMPLE_RESULTS: ConversionItemResult[] = [
+  {
+    gameId: 'appmanifest_1465360.acf',
+    appId: '1465360',
+    name: 'SnowRunner',
+    outcome: 'success',
+  },
+];
+
 /** Fake state used by the dev-only state switcher. */
 function devState(status: ConvertStatus): ConvertState {
   const scanned = {
@@ -161,12 +209,13 @@ function devState(status: ConvertStatus): ConvertState {
       // Must not keep the previous list around.
       return { ...initialConvertState, status, directory: DEV_SAMPLE_DIRECTORY };
     case 'converting':
-      return { ...scanned, processed: 2 };
+      return { ...scanned, processed: 2, batchTotal: scanned.selected.length };
     case 'converted':
       return {
         ...scanned,
-        processed: scanned.selected.length,
-        summary: summarise(DEV_SAMPLE_GAMES, scanned.selected),
+        processed: DEV_SAMPLE_RESULTS.length,
+        summary: summarise(DEV_SAMPLE_RESULTS),
+        results: DEV_SAMPLE_RESULTS,
       };
     default:
       return scanned;
@@ -286,18 +335,68 @@ export function convertReducer(state: ConvertState, event: ConvertEvent): Conver
       if (state.selected.length === 0) {
         return state;
       }
-      return { ...state, status: 'converting', processed: 0, summary: null };
+      return {
+        ...state,
+        status: 'converting',
+        processed: 0,
+        batchTotal: state.selected.length,
+        summary: null,
+      };
 
     case 'conversion-progressed':
       return { ...state, processed: event.processed };
 
-    case 'conversion-finished':
+    case 'conversion-finished': {
+      const { results } = event;
+      const succeeded = new Set(
+        results.filter((r) => r.outcome === 'success').map((r) => r.gameId),
+      );
+
+      // Rows that were written become `alreadyAdapted` in place, without a
+      // rescan: the app just did the thing that makes them so, and forcing a
+      // rescan to see it would re-read the whole tree to learn what is already
+      // known. Rows outside this batch are left exactly as they were.
+      const games = state.games.map((game) =>
+        succeeded.has(game.id)
+          ? ({ ...game, status: 'alreadyAdapted', reason: 'already-marked' } as ScannedGame)
+          : game,
+      );
+
+      // Successful rows lose their tick — the work is done, and leaving them
+      // ticked would invite re-running it. Failures and skips stay ticked so a
+      // retry is one tap, which is the whole point of keeping them selected.
+      const selected = state.selected.filter((id) => !succeeded.has(id));
+
+      if (event.abortedBy === 'permission-revoked') {
+        // Narrows the usual `permission-revoked` handling, which clears the list
+        // on the grounds that nothing about it can be trusted. Here part of the
+        // batch already completed, and that record is the user's only evidence of
+        // what landed on disk, so `games` / `summary` / `results` are kept while
+        // the card still asks them to re-pick the directory. See the app-shell
+        // delta.
+        return {
+          ...state,
+          status: 'permission-revoked',
+          games,
+          selected,
+          processed: results.length,
+          summary: summarise(results),
+          results,
+        };
+      }
+
       return {
         ...state,
         status: 'converted',
-        processed: state.selected.length,
-        summary: summarise(state.games, state.selected),
+        games,
+        selected,
+        // The real count of games that finished, which for an ordinary run is
+        // every game handed in.
+        processed: results.length,
+        summary: summarise(results),
+        results,
       };
+    }
 
     case 'reset':
       // Keeps the id counter moving so a scan in flight cannot resurface.

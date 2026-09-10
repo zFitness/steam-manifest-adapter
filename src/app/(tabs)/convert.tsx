@@ -1,5 +1,6 @@
 import { useCallback, useReducer, useRef, useState } from 'react';
 import { Button, Dialog } from 'heroui-native';
+import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCSSVariable } from 'uniwind';
@@ -14,6 +15,9 @@ import {
 } from '@/features/convert/convert-state';
 import { DevStateSwitcher } from '@/features/convert/dev-state-switcher';
 import { LibraryCard } from '@/features/convert/library-card';
+import { convertGames } from '@/features/conversion/converter';
+import { createExpoFsWriter } from '@/features/conversion/expo-fs-writer';
+import { setLastResults } from '@/features/conversion/results-store';
 import { createExpoFs } from '@/features/library-scan/expo-fs';
 import { scanLibrary } from '@/features/library-scan/scanner';
 import { writeDirectory } from '@/features/storage-access/directory-store';
@@ -23,6 +27,7 @@ import { useTranslate } from '@/i18n/provider';
 
 const storageAccess = createSafStorageAccess();
 const fs = createExpoFs();
+const writer = createExpoFsWriter();
 
 export default function ConvertScreen() {
   const t = useTranslate();
@@ -39,6 +44,17 @@ export default function ConvertScreen() {
   const scanToken = useRef<{ cancelled: boolean } | null>(null);
   // Monotonic source of scan ids. A ref, because minting one must not re-render.
   const nextScanId = useRef(0);
+  /**
+   * The granted directory's opaque URI.
+   *
+   * Held separately from `state.directory`, which carries the human-readable name
+   * for display. Writing needs the real handle, and the two must not be confused:
+   * the URI never reaches the UI.
+   */
+  const rootUri = useRef<string | null>(null);
+  // Adapting writes to disk, so a second concurrent run is not merely wasteful.
+  // A ref, because the guard must hold before any re-render happens.
+  const convertInFlight = useRef(false);
   const mutedTertiary = String(useCSSVariable('--muted-tertiary') ?? '#747584');
 
   const isBusy = state.status === 'converting';
@@ -100,6 +116,11 @@ export default function ConvertScreen() {
     if (pickInFlight.current) {
       return;
     }
+    // Changing the directory mid-write would leave the run writing into a tree
+    // the card no longer shows, so the entry point is closed while adapting.
+    if (convertInFlight.current) {
+      return;
+    }
     pickInFlight.current = true;
 
     // Re-picking abandons whatever is still scanning, so its result cannot
@@ -123,6 +144,8 @@ export default function ConvertScreen() {
       // Only the opaque URI is persisted. Losing the write costs the directory
       // on the next cold start but must not interrupt this session.
       await writeDirectory(picked.uri);
+      // Kept for the write step, which needs the handle rather than the name.
+      rootUri.current = picked.uri;
       // The readable name is what reaches the card — never the `content://` URI.
       // One id per grant, minted here so the scan and the reducer agree on it.
       const scanId = nextScanId.current + 1;
@@ -159,9 +182,57 @@ export default function ConvertScreen() {
     dispatch({ type: 'toggle-all' });
   }, []);
 
-  const handleStartConversion = useCallback(() => {
+  /**
+   * Runs the batch and reports what it did.
+   *
+   * There is no cancel entry point on purpose: each game's write is two file
+   * operations with its own rollback, so stopping between games saves nothing
+   * worth the ambiguity of a half-reported run.
+   */
+  const handleStartConversion = useCallback(async () => {
     setDialogOpen(false);
+
+    const root = rootUri.current;
+    // Without a handle there is nothing to write into. Should not be reachable —
+    // the button only appears after a scan — but the write path must not depend
+    // on that being true.
+    if (root === null || convertInFlight.current) {
+      return;
+    }
+    convertInFlight.current = true;
+
+    // Snapshotted before dispatching: the reducer clears successful rows out of
+    // `selected`, so reading it later would give a shrinking list.
+    const chosen = state.games.filter((game) => state.selected.includes(game.id));
+
     dispatch({ type: 'start-conversion' });
+
+    try {
+      const run = await convertGames({
+        fs,
+        writer,
+        rootUri: root,
+        games: chosen,
+        onProgress: (processed) => {
+          dispatch({ type: 'conversion-progressed', processed });
+        },
+      });
+
+      // Stashed before the dispatch so the results route can never read a state
+      // the card has already moved past.
+      setLastResults(run.results);
+      dispatch({
+        type: 'conversion-finished',
+        results: run.results,
+        ...(run.abortedBy === undefined ? {} : { abortedBy: run.abortedBy }),
+      });
+    } finally {
+      convertInFlight.current = false;
+    }
+  }, [state.games, state.selected]);
+
+  const handleViewResults = useCallback(() => {
+    router.push('/conversion-result');
   }, []);
 
   const handleDevGoto = useCallback(
@@ -203,7 +274,7 @@ export default function ConvertScreen() {
             onCancelScan={handleCancelScan}
             onToggleGame={handleToggleGame}
             onToggleAll={handleToggleAll}
-            onViewResults={() => {}}
+            onViewResults={handleViewResults}
           />
 
           {state.status === 'no-directory' ? (
@@ -243,7 +314,7 @@ export default function ConvertScreen() {
               {isBusy
                 ? t('convert.progress.counter', {
                     done: state.processed,
-                    total: state.selected.length,
+                    total: state.batchTotal,
                   })
                 : t('convert.action.start', { count: state.selected.length })}
             </Button>
@@ -292,7 +363,9 @@ export default function ConvertScreen() {
               </Button>
               <Button
                 variant="primary"
-                onPress={handleStartConversion}
+                onPress={() => {
+                  void handleStartConversion();
+                }}
                 className="h-12 flex-1 rounded-3xl"
               >
                 {t('confirm.start')}
