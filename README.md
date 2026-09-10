@@ -1,4 +1,4 @@
-# Steam Manifest Adapter（Steam 清单适配器）
+# Steam Manifest Adapter
 
 **中文 | [English](./README.en.md)**
 
