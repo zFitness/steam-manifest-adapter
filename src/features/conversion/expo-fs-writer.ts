@@ -33,12 +33,15 @@ import type { CreatedFile, WritableFs } from './fs-writer';
 /**
  * Mime type passed to `createFile`.
  *
- * `null` is the signal for "no type, do not derive an extension". If a device
- * turns out to reject it or to append something anyway, the fallbacks are
- * `application/octet-stream` then `text/plain` — each judged by the same
- * landed-name check, never by assuming it worked. Not yet verified on a device.
+ * Verified on a device (Legion Y700, Android 15): passing `null` does *not*
+ * mean "no type" — the Kotlin side (`FileSystemDirectory.createFile`) falls
+ * back to `text/plain`, and `DocumentsContract.createDocument` then treats a
+ * stem-less name like `.download_complete` as a bare extension and appends
+ * `.txt`, so the marker lands as `download_complete.txt` and the consumer
+ * never recognises it. `application/octet-stream` maps to no extension in
+ * `MimeTypeMap`, so the requested name lands verbatim.
  */
-const MARKER_MIME_TYPE = null;
+const MARKER_MIME_TYPE = 'application/octet-stream';
 
 /**
  * Maps a platform exception onto our error kinds.

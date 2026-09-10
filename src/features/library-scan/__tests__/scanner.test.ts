@@ -143,7 +143,7 @@ describe('scanLibrary', () => {
       const result = await scanLibrary({ fs, rootUri: MEMORY_FS_ROOT });
 
       if (result.kind !== 'ok') throw new Error('expected ok');
-      expect(byId(result.games, 'appmanifest_228980.acf').name).toBe('228980');
+      expect(byId(result.games, 'appmanifest_228980.acf').name).toBe('228990');
     });
   });
 

@@ -115,45 +115,6 @@ function ListHeader({
   );
 }
 
-/** Four-way outcome summary shown after a run (task 4.5). */
-function ConvertedSummary({
-  summary,
-}: {
-  summary: NonNullable<ConvertState['summary']>;
-}) {
-  const t = useTranslate();
-
-  const rows: { key: string; label: string; value: number }[] = [
-    { key: 'success', label: t('status.success'), value: summary.success },
-    {
-      key: 'alreadyAdapted',
-      label: t('status.alreadyAdapted'),
-      value: summary.alreadyAdapted,
-    },
-    { key: 'skipped', label: t('status.skipped'), value: summary.skipped },
-    { key: 'failed', label: t('status.failed'), value: summary.failed },
-  ];
-
-  return (
-    <View className="gap-2.5 rounded-xl bg-surface-secondary p-3">
-      <Text className="text-[13px] font-semibold text-foreground">
-        {t('convert.done.title')}
-      </Text>
-
-      <View className="flex-row flex-wrap gap-x-4 gap-y-1">
-        {rows.map((row) => (
-          <Text key={row.key} className="text-xs text-muted">
-            {t('convert.done.summaryItem', {
-              label: row.label,
-              count: row.value,
-            })}
-          </Text>
-        ))}
-      </View>
-    </View>
-  );
-}
-
 /**
  * The single game-directory card. Every one of the eight states in
  * `ConvertStatus` renders here — this is never split into separate screens.
@@ -280,7 +241,22 @@ export function LibraryCard({
             }
           />
 
-          {state.summary ? <ConvertedSummary summary={state.summary} /> : null}
+          {state.summary ? (
+            // A revoked batch left real changes on disk; the four counts are
+            // the user's only record of them, since the result dialog cannot
+            // rescan to confirm anything. The per-game breakdown is gone with
+            // the grant, so counts are all that can be shown here.
+            <View className="gap-1 rounded-xl bg-surface-secondary px-3 py-2.5">
+              <Text className="text-xs text-muted">
+                {t('convert.library.permissionLostDuringConvert.counts', {
+                  success: state.summary.success,
+                  alreadyAdapted: state.summary.alreadyAdapted,
+                  skipped: state.summary.skipped,
+                  failed: state.summary.failed,
+                })}
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -308,10 +284,6 @@ export function LibraryCard({
               onToggleAll={onToggleAll}
               canReselect={state.status !== 'converting'}
             />
-
-            {state.status === 'converted' && state.summary ? (
-              <ConvertedSummary summary={state.summary} />
-            ) : null}
 
             {/* Only the list scrolls, so the primary button below the card stays
                 reachable without scrolling the whole page.

@@ -48,6 +48,14 @@ export type Classification = {
 /** `4` is Steam's "fully installed" flag; nothing else may be adapted by default. */
 const FULLY_INSTALLED = 4;
 
+/**
+ * Steam's fixed appid for the Steamworks Common Redistributables. Steam
+ * downloads it on its own — it is a runtime component, not a game the user
+ * picked — and the target platform has no use for it as a "game" either, so a
+ * manifest carrying this appid is never offered for adaptation.
+ */
+const STEAMWORKS_REDIST_APPID = '228980';
+
 function isFullyInstalled(stateFlags: string): boolean {
   if (stateFlags === '') {
     return false;
@@ -74,6 +82,11 @@ export function classify(
           ? 'manifest-missing-fields'
           : 'manifest-unreadable',
     };
+  }
+
+  // 1. notAdaptable — a Steam platform component, not a user game.
+  if (parsed.fields.appId === STEAMWORKS_REDIST_APPID) {
+    return { status: 'notAdaptable', reason: 'steam-shared-component' };
   }
 
   // 1. notAdaptable — `installdir` could take us outside the granted tree.

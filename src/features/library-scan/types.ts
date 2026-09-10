@@ -36,7 +36,13 @@ export type ScanReason =
   /** The manifest parsed but lacks `appid` or `installdir`. */
   | 'manifest-missing-fields'
   /** `installdir` is not a plain single folder name. */
-  | 'manifest-invalid-installdir';
+  | 'manifest-invalid-installdir'
+  /**
+   * A Steam platform component (appid 228980, Steamworks Common
+   * Redistributables), not a user game. Steam installs it automatically and it
+   * means nothing to the target platform as a "game", so it is never adapted.
+   */
+  | 'steam-shared-component';
 
 export type ScannedGame = {
   /** Stable per-row identity: the manifest file name, which is unique per library. */

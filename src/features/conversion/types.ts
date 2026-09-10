@@ -20,7 +20,7 @@ export type ConversionOutcome = 'success' | 'alreadyAdapted' | 'skipped' | 'fail
 
 /**
  * Why a game did not end up `success`. A stable code, not a sentence: the UI
- * turns it into localised copy via `result.reason.<code>`, so no real path ever
+ * turns it into localised copy via `convert.result.reason.<code>`, so no real path ever
  * reaches a string here.
  *
  * Kept separate from `ScanReason` rather than merged into one enum. The two

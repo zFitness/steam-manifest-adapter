@@ -97,7 +97,7 @@ export const ACF_EMPTY_INSTALLDIR = `"AppState"
 /** No `name`, but everything needed to locate the game — must still classify. */
 export const ACF_MISSING_NAME = `"AppState"
 {
-	"appid"		"228980"
+	"appid"		"228990"
 	"StateFlags"		"4"
 	"installdir"		"Steamworks Shared"
 }

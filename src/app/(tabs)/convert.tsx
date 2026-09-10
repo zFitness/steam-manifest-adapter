@@ -12,6 +12,7 @@ import {
   initialConvertState,
 } from '@/features/convert/convert-state';
 import { LibraryCard } from '@/features/convert/library-card';
+import { ResultDialog } from '@/features/convert/result-dialog';
 import { convertGames } from '@/features/conversion/converter';
 import { createExpoFsWriter } from '@/features/conversion/expo-fs-writer';
 import { createExpoFs } from '@/features/library-scan/expo-fs';
@@ -191,6 +192,29 @@ export default function ConvertScreen() {
    * operations with its own rollback, so stopping between games saves nothing
    * worth the ambiguity of a half-reported run.
    */
+  /**
+   * Closes the result dialog and refreshes the list.
+   *
+   * The dialog is the only place batch results live now, so dismissing it is
+   * the point where the rows underneath are stale: a rescan reads the markers
+   * the batch just wrote back off the disk, which stays true even when the
+   * folder was changed externally mid-run. Going through `pick-directory`
+   * rather than a scan-only event also covers the lapsed-grant case — an
+   * unreadable or revoked root lands on the same failure/permission states as
+   * any other scan instead of needing a dialog-specific path.
+   */
+  const handleCloseResult = useCallback(() => {
+    const root = rootUri.current;
+    if (root === null || state.directory === null) {
+      dispatch({ type: 'reset' });
+      return;
+    }
+    const scanId = nextScanId.current + 1;
+    nextScanId.current = scanId;
+    dispatch({ type: 'pick-directory', directory: state.directory, scanId });
+    void runScan(root, scanId);
+  }, [runScan, state.directory]);
+
   const handleStartConversion = useCallback(async () => {
     setDialogOpen(false);
 
@@ -368,6 +392,14 @@ export default function ConvertScreen() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog>
+
+      {/* Mutually exclusive with the confirm dialog by state: this one only
+          opens on `converted`, which `start-conversion` has already left. */}
+      <ResultDialog
+        isOpen={state.status === 'converted'}
+        results={state.results}
+        onClose={handleCloseResult}
+      />
     </SafeAreaView>
   );
 }

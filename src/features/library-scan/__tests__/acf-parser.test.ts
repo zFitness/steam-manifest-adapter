@@ -76,7 +76,7 @@ describe('parseAcf', () => {
 
     expect(result.ok).toBe(true);
     expect(result.ok && result.fields.name).toBe('');
-    expect(result.ok && result.fields.appId).toBe('228980');
+    expect(result.ok && result.fields.appId).toBe('228990');
   });
 
   it('reports missing StateFlags as empty rather than failing', () => {
