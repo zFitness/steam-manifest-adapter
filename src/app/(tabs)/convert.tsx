@@ -11,9 +11,7 @@ import { InfoIcon } from '@/features/convert/chain-icons';
 import {
   convertReducer,
   initialConvertState,
-  type ConvertStatus,
 } from '@/features/convert/convert-state';
-import { DevStateSwitcher } from '@/features/convert/dev-state-switcher';
 import { LibraryCard } from '@/features/convert/library-card';
 import { convertGames } from '@/features/conversion/converter';
 import { createExpoFsWriter } from '@/features/conversion/expo-fs-writer';
@@ -235,15 +233,6 @@ export default function ConvertScreen() {
     router.push('/conversion-result');
   }, []);
 
-  const handleDevGoto = useCallback(
-    (status: ConvertStatus) => {
-      setCancelledMessage(false);
-      setPermissionDenied(false);
-      dispatch({ type: 'dev-goto', status });
-    },
-    [],
-  );
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right']}>
       <ScrollView
@@ -260,10 +249,8 @@ export default function ConvertScreen() {
           <Text className="text-sm leading-[22px] text-muted">
             {t('convert.subtitle')}
           </Text>
-          <Text className="text-xs text-success">{t('convert.safetyNote')}</Text>
+          {/* <Text className="text-xs text-success">{t('convert.safetyNote')}</Text> */}
         </View>
-
-        <DevStateSwitcher current={state.status} onSelect={handleDevGoto} />
 
         <ChainCard />
 
@@ -313,9 +300,9 @@ export default function ConvertScreen() {
             >
               {isBusy
                 ? t('convert.progress.counter', {
-                    done: state.processed,
-                    total: state.batchTotal,
-                  })
+                  done: state.processed,
+                  total: state.batchTotal,
+                })
                 : t('convert.action.start', { count: state.selected.length })}
             </Button>
           ) : null}

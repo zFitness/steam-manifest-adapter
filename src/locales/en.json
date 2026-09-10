@@ -31,7 +31,7 @@
   "convert.library.empty.title": "No game folder selected",
   "convert.library.empty.description": "Pick the folder that holds your Steam games to start scanning",
   "convert.library.empty.action": "Set game folder",
-  "convert.library.empty.hint": "Usually under storage/",
+  "convert.library.empty.hint": "For GameSir emulator, select the ../steamapps folder",
   "convert.library.empty.permissionDenied": "Access to that folder was not granted. Please try again.",
 
   "convert.library.scanning.title": "Scanning Steam manifests…",
