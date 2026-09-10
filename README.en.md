@@ -1,6 +1,18 @@
+<div align="center">
+
+![Steam Manifest Adapter](./docs/icon-rounded.png)
+
 # Steam Manifest Adapter
 
 **[中文](./README.md) | English**
+
+[![Release](https://img.shields.io/github/v/release/zFitness/steam-manifest-adapter?label=Release&logo=github)](https://github.com/zFitness/steam-manifest-adapter/releases)
+[![Platform](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android)](#prerequisites)
+[![License](https://img.shields.io/badge/License-MIT-595EF0)](./LICENSE)
+
+![Banner](./docs/banner.png)
+
+</div>
 
 An offline-first open-source Android tool: it scans Steam game directories downloaded by the GameHub emulator, reads the `steamapps/appmanifest_<appid>.acf` manifest files, and adapts the game directories into a state WinNative can recognize (removing `.download_in_progress` and creating `.download_complete`).
 
@@ -39,6 +51,10 @@ WinNative scans and recognizes the games
 - Never modifies the WinNative database, fetches Steam PICS info, or locates game executables automatically
 - No root support, no access to Android private directories (`Android/data/`, `/data/data/`), no all-files storage permission
 - No GameNative support in the first release
+
+## Download
+
+Get the latest `steam-manifest-adapter-v*.apk` from [GitHub Releases](https://github.com/zFitness/steam-manifest-adapter/releases), transfer it to your phone, and allow "Install unknown apps" when prompted (arm64 only, Android 7.0+).
 
 ## Prerequisites
 

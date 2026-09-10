@@ -1,6 +1,18 @@
+<div align="center">
+
+![Steam Manifest Adapter](./docs/icon-rounded.png)
+
 # Steam Manifest Adapter
 
 **中文 | [English](./README.en.md)**
+
+[![Release](https://img.shields.io/github/v/release/zFitness/steam-manifest-adapter?label=Release&logo=github)](https://github.com/zFitness/steam-manifest-adapter/releases)
+[![Platform](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android)](#使用前提)
+[![License](https://img.shields.io/badge/License-MIT-595EF0)](./LICENSE)
+
+![Banner](./docs/banner.png)
+
+</div>
 
 一个离线优先的 Android 开源工具：扫描盖世模拟器下载的 Steam 游戏目录，读取 `steamapps/appmanifest_<appid>.acf` 清单文件，把游戏目录适配成 WinNative 能识别的状态（删除 `.download_in_progress`、创建 `.download_complete`）。
 
@@ -39,6 +51,10 @@ WinNative 扫描并识别游戏
 - 不修改 WinNative 数据库，不自动获取 Steam PICS 信息，不自动找游戏 exe
 - 不支持 root、不访问 Android 私有目录（`Android/data/`、`/data/data/`）、不要求全盘存储权限
 - 第一阶段不支持 GameNative
+
+## 下载
+
+前往 [GitHub Releases](https://github.com/zFitness/steam-manifest-adapter/releases) 下载最新 `steam-manifest-adapter-v*.apk`，传输到手机后允许「安装未知来源应用」即可安装（仅支持 arm64，Android 7.0+）。
 
 ## 使用前提
 
